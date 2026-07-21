@@ -1,0 +1,5 @@
+# Course-wide dependencies.
+# Install into your virtual environment with:  pip install -r requirements.txt
+pandas
+numpy
+matplotlib

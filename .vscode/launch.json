@@ -1,0 +1,15 @@
+{
+  // Used in the Lesson 1 debugging demo: open a .py file, set a breakpoint, press F5.
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Python: Current File",
+      "type": "debugpy",
+      "request": "launch",
+      "program": "${file}",
+      "console": "integratedTerminal",
+      "cwd": "${fileDirname}",
+      "justMyCode": true
+    }
+  ]
+}
