@@ -5,7 +5,7 @@ Repository for the UChicago Quant Foundations Programming Module — Summer 2026
 ## Getting started
 
 ```bash
-git clone https://github.com/<org>/quant-foundation-series-programming-2026.git
+git clone https://github.com/madison-rusch/quant-foundation-series-programming-2026.git
 cd quant-foundation-series-programming-2026
 ```
 

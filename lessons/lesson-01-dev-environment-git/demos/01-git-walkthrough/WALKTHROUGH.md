@@ -6,7 +6,7 @@ Switch screen share to VS Code. Narrate each step as you type it. Roughly 10 min
 
 ```bash
 # 1. Clone — copy the repo (and its full history) to your machine
-git clone https://github.com/<org>/quant-foundation-series-programming-2026.git
+git clone https://github.com/madison-rusch/quant-foundation-series-programming-2026.git
 cd quant-foundation-series-programming-2026
 
 # 2. Branch — an independent line of work off main

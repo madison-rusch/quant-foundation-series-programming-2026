@@ -11,7 +11,7 @@ Everyone's script is the same except for **one unique bug**. Yours might be a sy
 
 ```bash
 # 1. Clone the repo (skip if you did this in class)
-git clone https://github.com/<org>/quant-foundation-series-programming-2026.git
+git clone https://github.com/madison-rusch/quant-foundation-series-programming-2026.git
 cd quant-foundation-series-programming-2026
 
 # 2. Make sure you're starting from the latest main
