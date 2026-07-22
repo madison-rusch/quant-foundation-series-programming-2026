@@ -19,7 +19,7 @@ Do not rewrite the script. Change as little as possible.
 
 def future_value(principal, annual_rate, years):
     """Value of `principal` after `years` of annual compounding."""
-    return principal * (1 + annual_rate * years)
+    return principal * (1 + annual_rate) ** years # fixed the bug by changing the bracket and operator from * to ** for continous compounding
 
 
 def present_value(future_amount, annual_rate, years):
