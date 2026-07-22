@@ -11,6 +11,7 @@ CLASS_ROSTER = [
     #   git add .
     #   git commit -m "add <your name> to roster"
     #   git push origin <your-branch>
+    "Student - Starck"
 ]
 
 
