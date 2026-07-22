@@ -24,7 +24,7 @@ pip install -r requirements.txt
 | # | Topic | |
 |---|---|---|
 | 1 | Developer Environment & Git | [lessons/lesson-01-dev-environment-git/](lessons/lesson-01-dev-environment-git/) |
-| 2 | AI as a Coding Tool | _coming soon_ |
+| 2 | AI as a Coding Tool | [lessons/lesson-02-ai-coding-tool/](lessons/lesson-02-ai-coding-tool/) |
 | 3 | Python Fundamentals | _coming soon_ |
 | 4 | — | _coming soon_ |
 | 5 | Student-Driven Session | _coming soon_ |
