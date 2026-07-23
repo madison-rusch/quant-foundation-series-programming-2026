@@ -35,7 +35,7 @@ def total_interest_earned(principal, annual_rate, years):
 def main():
     principal = 1000.0
     annual_rate = 0.05
-    years = "10"
+    years = 10
 
     fv = future_value(principal, annual_rate, years)
     pv = present_value(fv, annual_rate, years)

@@ -29,7 +29,7 @@ def present_value(future_amount, annual_rate, years):
 
 def total_interest_earned(principal, annual_rate, years):
     """The growth above the original principal."""
-    return future_value(principal, annual_rate, years)
+    return future_value(principal, annual_rate, years)-principal
 
 
 def main():

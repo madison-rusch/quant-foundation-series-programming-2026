@@ -44,7 +44,7 @@ def main():
     print(f"Principal:       {principal:>10,.2f}")
     print(f"Rate:            {annual_rate:>10.2%}")
     print(f"Years:           {years:>10}")
-    print(f"Future value:    {fv:>10,.2f}"
+    print(f"Future value:    {fv:>10,.2f}")
     print(f"Present value:   {pv:>10,.2f}")
     print(f"Interest earned: {interest:>10,.2f}")
 
