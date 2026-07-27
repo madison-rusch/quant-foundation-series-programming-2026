@@ -6,7 +6,7 @@ the list below, then commit and push the change on your own branch.
 """
 
 CLASS_ROSTER = [
-    "Instructor — Madison Rusch",
+    "Instructor — Ananya Sharma",
     # Add your name here during the demo, then:
     #   git add .
     #   git commit -m "add <your name> to roster"
