@@ -22,7 +22,7 @@ def future_value(principal, annual_rate, years):
     return principal * (1 + annual_rate) ** years
 
 
-def present_value(future_amount, annual_rate, years)
+def present_value(future_amount, annual_rate, years):
     """Today's value of `future_amount` received `years` from now."""
     return future_amount / (1 + annual_rate) ** years
 
