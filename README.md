@@ -25,8 +25,8 @@ pip install -r requirements.txt
 |---|---|---|
 | 1 | Developer Environment & Git | [lessons/lesson-01-dev-environment-git/](lessons/lesson-01-dev-environment-git/) |
 | 2 | AI as a Coding Tool | [lessons/lesson-02-ai-coding-tool/](lessons/lesson-02-ai-coding-tool/) |
-| 3 | Python Fundamentals | _coming soon_ |
-| 4 | — | _coming soon_ |
+| 3 | Python Fundamentals via Web Scraping | [lessons/lesson-03-python-fundamentals/](lessons/lesson-03-python-fundamentals/) |
+| 4 | NumPy, Pandas & Data Analysis | [lessons/lesson-04-numpy-pandas-data-analysis/](lessons/lesson-04-numpy-pandas-data-analysis/) |
 | 5 | Student-Driven Session | _coming soon_ |
 
 ## How we work
