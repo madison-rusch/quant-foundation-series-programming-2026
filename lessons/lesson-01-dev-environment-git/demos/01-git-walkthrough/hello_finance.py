@@ -7,6 +7,7 @@ the list below, then commit and push the change on your own branch.
 
 CLASS_ROSTER = [
     "Instructor — Madison Rusch",
+    "Student - Shreyas Paranjape",
     # Add your name here during the demo, then:
     #   git add .
     #   git commit -m "add <your name> to roster"
@@ -15,7 +16,7 @@ CLASS_ROSTER = [
 
 
 def main():
-    print("Quant Foundations Summer 2026 — Programming Module")
+    print("Quant Foundations Fall 2026 — Programming Module")
     print(f"Roster ({len(CLASS_ROSTER)} people):")
     for name in CLASS_ROSTER:
         print(f"  - {name}")
