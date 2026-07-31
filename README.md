@@ -27,7 +27,7 @@ pip install -r requirements.txt
 | 2 | AI as a Coding Tool | [lessons/lesson-02-ai-coding-tool/](lessons/lesson-02-ai-coding-tool/) |
 | 3 | Python Fundamentals via Web Scraping | [lessons/lesson-03-python-fundamentals/](lessons/lesson-03-python-fundamentals/) |
 | 4 | NumPy, Pandas & Data Analysis | [lessons/lesson-04-numpy-pandas-data-analysis/](lessons/lesson-04-numpy-pandas-data-analysis/) |
-| 5 | Student-Driven Session | _coming soon_ |
+| 5 | Real-World Equity Analysis (Capstone) | [lessons/lesson-05-equity-analysis-capstone/](lessons/lesson-05-equity-analysis-capstone/) |
 
 ## How we work
 

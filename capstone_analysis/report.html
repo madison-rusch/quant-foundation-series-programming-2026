@@ -1,0 +1,726 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>S&amp;P 500 &mdash; One-Year Market Analysis</title>
+<style>
+:root {
+  color-scheme: light;
+  --surface-1:      #fcfcfb;
+  --page-plane:     #f9f9f7;
+  --text-primary:   #0b0b0b;
+  --text-secondary: #52514e;
+  --text-muted:     #898781;
+  --grid:           #e1e0d9;
+  --baseline:       #c3c2b7;
+  --success:        #006300;
+  --border:         rgba(11,11,11,0.10);
+  --series-1: #2a78d6; --series-2: #eb6834; --series-3: #1baf7a; --series-4: #eda100; --series-5: #e87ba4;
+  --series-6: #008300; --series-7: #4a3aa7; --series-8: #e34948;
+  --diverging-pos: #2a78d6; --diverging-neg: #e34948; --diverging-mid: #f0efec;
+  --heat-pos3: #256abf; --heat-pos2: #6da7ec; --heat-pos1: #cde2fb;
+  --heat-zero: #f0efec;
+  --heat-neg1: #f8d9d8; --heat-neg2: #ef9d9c; --heat-neg3: #e34948;
+  --heat-text-inverse: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --surface-1: #1a1a19; --page-plane: #0d0d0d; --text-primary: #ffffff; --text-secondary: #c3c2b7;
+    --text-muted: #898781; --grid: #2c2c2a; --baseline: #383835; --success: #0ca30c; --border: rgba(255,255,255,0.10);
+    --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; --series-5: #d55181;
+    --series-6: #008300; --series-7: #9085e9; --series-8: #e66767;
+    --diverging-pos: #3987e5; --diverging-neg: #e66767; --diverging-mid: #383835;
+    --heat-pos3: #3987e5; --heat-pos2: #2a5f96; --heat-pos1: #1c3a5c;
+    --heat-zero: #383835;
+    --heat-neg1: #4a2626; --heat-neg2: #c25555; --heat-neg3: #e66767;
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface-1: #1a1a19; --page-plane: #0d0d0d; --text-primary: #ffffff; --text-secondary: #c3c2b7;
+  --text-muted: #898781; --grid: #2c2c2a; --baseline: #383835; --success: #0ca30c; --border: rgba(255,255,255,0.10);
+  --series-1: #3987e5; --series-2: #d95926; --series-3: #199e70; --series-4: #c98500; --series-5: #d55181;
+  --series-6: #008300; --series-7: #9085e9; --series-8: #e66767;
+  --diverging-pos: #3987e5; --diverging-neg: #e66767; --diverging-mid: #383835;
+  --heat-pos3: #3987e5; --heat-pos2: #2a5f96; --heat-pos1: #1c3a5c;
+  --heat-zero: #383835;
+  --heat-neg1: #4a2626; --heat-neg2: #c25555; --heat-neg3: #e66767;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0; background: var(--page-plane); color: var(--text-primary);
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif; line-height: 1.5;
+}
+.wrap { max-width: 1080px; margin: 0 auto; padding: 24px 20px 64px; }
+h1 { font-size: 1.7rem; margin: 0 0 4px; }
+h2 { font-size: 1.3rem; margin: 40px 0 16px; padding-top: 8px; border-top: 1px solid var(--border); }
+h3 { font-size: 1.05rem; margin: 20px 0 8px; }
+.subtitle { color: var(--text-secondary); margin: 0; }
+.header-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; }
+.badge {
+  display: inline-block; margin-top: 10px; font-size: 0.78rem; padding: 4px 10px; border-radius: 999px;
+  background: var(--surface-1); border: 1px solid var(--border); color: var(--text-secondary);
+}
+#theme-toggle {
+  font: inherit; font-size: 0.85rem; padding: 6px 12px; border-radius: 6px; border: 1px solid var(--border);
+  background: var(--surface-1); color: var(--text-primary); cursor: pointer;
+}
+#theme-toggle:hover { background: var(--grid); }
+
+.tile-row { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin: 16px 0; }
+.tile { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; }
+.tile-label { font-size: 0.78rem; color: var(--text-secondary); }
+.tile-value { font-size: 1.5rem; font-weight: 600; margin-top: 4px; }
+.tile-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 2px; }
+
+.findings { padding-left: 0; list-style: none; margin: 20px 0; display: flex; flex-direction: column; gap: 12px; }
+.findings li { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 12px 16px; }
+.finding-detail { color: var(--text-secondary); font-size: 0.92rem; }
+
+.chart-block { margin: 20px 0 8px; }
+.chart-caption { color: var(--text-secondary); font-size: 0.88rem; margin: 4px 0 12px; }
+.chart { background: var(--surface-1); border: 1px solid var(--border); border-radius: 10px; padding: 12px; position: relative; }
+.viz-svg { width: 100%; height: auto; display: block; overflow: visible; }
+.viz-grid { stroke: var(--grid); stroke-width: 1; }
+.viz-baseline { stroke: var(--baseline); stroke-width: 1.25; }
+.viz-line { fill: none; stroke-width: 2; }
+.viz-area { opacity: 0.14; }
+.viz-axis-label { fill: var(--text-muted); font-size: 10px; }
+.viz-end-label { font-size: 11px; font-weight: 600; }
+.viz-crosshair { stroke: var(--text-muted); stroke-width: 1; stroke-dasharray: 3 3; pointer-events: none; }
+.viz-bar-pos { fill: var(--diverging-pos); }
+.viz-bar-neg { fill: var(--diverging-neg); }
+.viz-hist-bar { fill: var(--series-1); opacity: 0.55; }
+.viz-overlay-line { fill: none; stroke: var(--text-secondary); stroke-width: 1.5; stroke-dasharray: 4 3; }
+.viz-heat-cell { stroke: var(--surface-1); stroke-width: 2; }
+.viz-heat-label { font-size: 12px; fill: var(--text-primary); text-anchor: middle; dominant-baseline: middle; }
+.viz-heat-label-inverse { fill: var(--heat-text-inverse); }
+.viz-heat-axis { font-size: 11px; fill: var(--text-secondary); }
+
+.viz-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 6px; padding-left: 4px; }
+.viz-legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.82rem; color: var(--text-secondary); }
+.viz-swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; flex: none; }
+
+.viz-tooltip {
+  position: absolute; pointer-events: none; background: var(--text-primary); color: var(--surface-1);
+  border-radius: 6px; padding: 6px 10px; font-size: 0.78rem; z-index: 5; max-width: 220px;
+}
+.viz-tooltip-date { font-weight: 600; margin-bottom: 2px; }
+.viz-tooltip-row { display: flex; align-items: center; gap: 6px; }
+
+table { border-collapse: collapse; width: 100%; margin: 8px 0 20px; font-size: 0.9rem; }
+table caption { text-align: left; font-weight: 600; margin-bottom: 6px; color: var(--text-primary); }
+th, td { text-align: left; padding: 6px 10px; border-bottom: 1px solid var(--border); }
+th { color: var(--text-secondary); font-weight: 600; font-size: 0.82rem; }
+.inline-table { overflow-x: auto; display: block; }
+
+.data-table summary { cursor: pointer; color: var(--text-secondary); font-size: 0.85rem; margin: 4px 0 4px; }
+.data-table table { overflow-x: auto; display: block; }
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+@media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } }
+
+.method-list { padding-left: 20px; color: var(--text-secondary); font-size: 0.92rem; }
+.method-list li { margin-bottom: 8px; }
+
+footer { margin-top: 48px; padding-top: 16px; border-top: 1px solid var(--border); color: var(--text-muted); font-size: 0.8rem; }
+code { background: var(--surface-1); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; font-size: 0.85em; }
+</style>
+</head>
+<body>
+
+<header class="page-header">
+  <div class="header-top">
+    <div>
+      <h1>S&amp;P 500 &mdash; One-Year Market Analysis</h1>
+      <p class="subtitle">2025-07-31 &ndash; 2026-07-30 &middot; 251 trading days &middot; 250 daily return observations</p>
+    </div>
+    <button id="theme-toggle" type="button" aria-label="Toggle light/dark theme">Toggle theme</button>
+  </div>
+  <span class="badge">Price return only &mdash; dividends not included</span>
+</header>
+
+<div class="wrap">
+
+<section id="summary">
+  <h2>Executive summary</h2>
+  <div class="tile-row"><div class="tile"><div class="tile-label">Total return</div><div class="tile-value">+17.3%</div></div><div class="tile"><div class="tile-label">Annualized volatility</div><div class="tile-value">12.9%</div></div><div class="tile"><div class="tile-label">Sharpe (rf = 0%)</div><div class="tile-value">1.31</div></div><div class="tile"><div class="tile-label">Max drawdown</div><div class="tile-value">-9.1%</div><div class="tile-sub">trough 2026-03-30</div></div><div class="tile"><div class="tile-label">From 52-week high</div><div class="tile-value">-2.3%</div></div></div>
+  <ul class="findings"><li><strong>Daily S&amp;P 500 returns moved strongly inversely with VIX (correlation -0.850) over the window.</strong><br><span class="finding-detail">This is a description of co-movement, not a causal claim about what drove either series.</span></li><li><strong>The S&amp;P 500 returned +17.3% in price terms over the trailing year.</strong><br><span class="finding-detail">Russell 2000 led the four indices at +33.2%, while S&amp;P 500 was the laggard at +17.3%. Figures are price return only — dividends are not included.</span></li><li><strong>The Russell 2000 outpaced the S&amp;P 500 by 15.9% over the window (+33.2% vs. +17.3%).</strong><br><span class="finding-detail">A widening small-cap/large-cap spread is a commonly watched breadth signal, shown here descriptively.</span></li><li><strong>The daily return distribution was inconsistent with normality at the 5% level (Jarque-Bera 16.68 vs. critical value 5.991).</strong><br><span class="finding-detail">Skew was -0.28 and excess kurtosis 1.14. 4 days moved more than 3 standard deviations, versus roughly 0.67 expected under a normal distribution of the same size.</span></li><li><strong>The deepest pullback of the year was -9.1%, from a peak on 2026-01-27 to a trough on 2026-03-30.</strong><br><span class="finding-detail">That drawdown recovered by 2026-04-15. The index spent 190 of 251 trading days below a prior high.</span></li></ul>
+  <h3>Rates &amp; the stock/bond relationship</h3>
+  <p class="chart-caption">Computed on the 248-day rates window and the 245-session
+  paired sample, both shorter than the 251-day equity window above.</p>
+  <ul class="findings"><li><strong>The 10-year yield rose 30bp to 4.67% while the 5-year rose 41bp, narrowing the 10y-5y spread from 41bp to 30bp — a bear flattener, led by the front end.</strong><br><span class="finding-detail">Over the 248-day rates window the 10y-5y spread ranged 22bp to 55bp and never inverted.</span></li><li><strong>Daily S&amp;P 500 returns and 10-year yield changes were weakly negatively correlated (r = -0.245) across 245 paired sessions.</strong><br><span class="finding-detail">The rolling 63-day correlation ranged -0.71 to 0.20 and ended at -0.57, sitting positive on 35.5% of the 183 days where it is defined. A negative sign means yields and equities moved in opposite directions, the pattern usually described as a discount-rate reading; a positive sign is usually described as a growth-news reading. This describes co-movement only, not causation.</span></li><li><strong>A 10bp rise in the 10-year yield corresponded on average to a -0.49% move in the S&amp;P 500.</strong><br><span class="finding-detail">An R² of 0.060 means rate moves explain little of the day-to-day variation in equity returns, so this is a weak average tendency rather than a reliable rule. Estimated over 245 paired sessions.</span></li><li><strong>On the 120 sessions the 10-year yield rose, the S&amp;P 500 averaged -13bp; on the 109 sessions it fell, +21bp.</strong><br><span class="finding-detail">Hit rates were 45.0% and 63.3% respectively, within the 245-session paired sample.</span></li></ul>
+</section>
+
+
+<section id="trend">
+  <h2>Trend &amp; performance</h2>
+  <div class="chart-block"><h3>Performance, rebased to 100</h3><p class="chart-caption">All four indices rebased to 100 at the start of the window so they are comparable on one axis.</p><div class="chart" id="chart-rebased"></div></div>
+  <details class="data-table"><summary>Show data table</summary><table><caption>Index scoreboard — trend</caption><thead><tr><th>Index</th><th>Total return</th><th>CAGR</th></tr></thead><tbody><tr><td>S&amp;P 500</td><td>+17.3%</td><td>+17.4%</td></tr><tr><td>Nasdaq 100</td><td>+21.1%</td><td>+21.1%</td></tr><tr><td>Dow Jones Industrial Average</td><td>+18.3%</td><td>+18.4%</td></tr><tr><td>Russell 2000</td><td>+33.2%</td><td>+33.3%</td></tr></tbody></table></details>
+  <table class="inline-table">
+    <caption>Index scoreboard</caption>
+    <thead><tr><th>Index</th><th>Total return</th><th>CAGR</th></tr></thead>
+    <tbody><tr><td>S&amp;P 500</td><td>+17.3%</td><td>+17.4%</td></tr><tr><td>Nasdaq 100</td><td>+21.1%</td><td>+21.1%</td></tr><tr><td>Dow Jones Industrial Average</td><td>+18.3%</td><td>+18.4%</td></tr><tr><td>Russell 2000</td><td>+33.2%</td><td>+33.3%</td></tr></tbody>
+  </table>
+
+  <div class="chart-block"><h3>S&amp;P 500 price with 50- and 200-day moving averages</h3><p class="chart-caption">200-day SMA is defined for the last 52 of 251 sessions (first valid 2026-05-15); no 50/200-day crossover is observable within that shorter window.</p><div class="chart" id="chart-sma"></div></div>
+
+  <div class="chart-block"><h3>Monthly returns</h3><p class="chart-caption">Compounded within each calendar month; July 2026 is a partial month.</p><div class="chart" id="chart-monthly"></div></div>
+  <details class="data-table"><summary>Show data table</summary><table><caption>Monthly returns (calendar-month compounded)</caption><thead><tr><th>Month</th><th>Return</th><th>Trading days</th><th>Partial</th></tr></thead><tbody><tr><td>2025-08</td><td>+1.9%</td><td>21</td><td>no</td></tr><tr><td>2025-09</td><td>+3.5%</td><td>21</td><td>no</td></tr><tr><td>2025-10</td><td>+2.3%</td><td>23</td><td>no</td></tr><tr><td>2025-11</td><td>+0.1%</td><td>19</td><td>no</td></tr><tr><td>2025-12</td><td>-0.1%</td><td>22</td><td>no</td></tr><tr><td>2026-01</td><td>+1.4%</td><td>20</td><td>no</td></tr><tr><td>2026-02</td><td>-0.9%</td><td>19</td><td>no</td></tr><tr><td>2026-03</td><td>-5.1%</td><td>22</td><td>no</td></tr><tr><td>2026-04</td><td>+10.4%</td><td>21</td><td>no</td></tr><tr><td>2026-05</td><td>+5.1%</td><td>20</td><td>no</td></tr><tr><td>2026-06</td><td>-1.1%</td><td>21</td><td>no</td></tr><tr><td>2026-07</td><td>-0.8%</td><td>21</td><td>no</td></tr></tbody></table></details>
+
+  <div class="two-col">
+    <div>
+      <h3>Best days</h3>
+      <table class="inline-table"><thead><tr><th>Date</th><th>Return</th></tr></thead><tbody><tr><td>2026-03-31</td><td>+2.9%</td></tr><tr><td>2026-04-08</td><td>+2.5%</td></tr><tr><td>2026-02-06</td><td>+2.0%</td></tr><tr><td>2026-06-11</td><td>+1.8%</td></tr><tr><td>2026-07-30</td><td>+1.7%</td></tr></tbody></table>
+    </div>
+    <div>
+      <h3>Worst days</h3>
+      <table class="inline-table"><thead><tr><th>Date</th><th>Return</th></tr></thead><tbody><tr><td>2025-10-10</td><td>-2.7%</td></tr><tr><td>2026-06-05</td><td>-2.6%</td></tr><tr><td>2026-01-20</td><td>-2.1%</td></tr><tr><td>2026-03-26</td><td>-1.7%</td></tr><tr><td>2026-03-27</td><td>-1.7%</td></tr></tbody></table>
+    </div>
+  </div>
+
+  <p class="chart-caption">
+    Up days: 140, down days: 110. Longest up streak:
+    9 days (ending 2026-06-02). Longest down streak:
+    5 days (ending 2025-08-21).
+    52-week high 7609.78 on 2026-06-02; 52-week low 6238.01 on 2025-08-01.
+  </p>
+</section>
+
+
+<section id="drawdowns">
+  <h2>Drawdowns</h2>
+  <div class="chart-block"><h3>S&amp;P 500 drawdown from running high</h3><p class="chart-caption">Depth below the running all-time high for the window; 0% means a new high.</p><div class="chart" id="chart-drawdown"></div></div>
+  <p class="chart-caption">
+    Maximum drawdown: -9.1%, peak 2026-01-27 &rarr; trough 2026-03-30
+    &rarr; recovered 2026-04-15.
+    Current drawdown from high: -2.3%. Days underwater: 190 of 251.
+  </p>
+  <table class="inline-table">
+    <caption>Drawdown episodes &ge; 3%</caption>
+    <thead><tr><th>Peak</th><th>Trough</th><th>Recovery</th><th>Depth</th><th>Days to trough</th><th>Days to recover</th></tr></thead>
+    <tbody><tr><td>2025-10-28</td><td>2025-11-20</td><td>2025-12-11</td><td>-5.1%</td><td>23</td><td>21</td></tr><tr><td>2026-01-27</td><td>2026-03-30</td><td>2026-04-15</td><td>-9.1%</td><td>62</td><td>16</td></tr><tr><td>2026-06-02</td><td>2026-06-10</td><td>ongoing</td><td>-4.5%</td><td>8</td><td>—</td></tr></tbody>
+  </table>
+</section>
+
+
+<section id="volatility">
+  <h2>Volatility</h2>
+  <div class="chart-block"><h3>21-day realized volatility vs. VIX</h3><p class="chart-caption">Both series are annualized volatility in percentage points, so they share one axis.</p><div class="chart" id="chart-vol"></div></div>
+  <p class="chart-caption">
+    Full-period annualized realized volatility: 12.9%. VIX averaged 18.19
+    (range 13.47&ndash;31.05, peak on 2026-03-27, last 17.09).
+    Average VIX-minus-trailing-realized-vol spread: 5.9% points.
+    Downside deviation: 8.9%.
+    ATR(14): 1.2% of price.
+  </p>
+  <table class="inline-table">
+    <caption>VIX regime, days in window</caption>
+    <thead><tr><th>Regime</th><th>Days</th></tr></thead>
+    <tbody><tr><td>low (&lt;15)</td><td>24</td></tr><tr><td>moderate (15-20)</td><td>175</td></tr><tr><td>elevated (20-30)</td><td>49</td></tr><tr><td>high (&gt;30)</td><td>2</td></tr></tbody>
+  </table>
+
+  <div class="chart-block"><h3>Daily log-return distribution</h3><p class="chart-caption">40-bin histogram of daily log returns with a normal-density overlay of the same mean and variance.</p><div class="chart" id="chart-hist"></div></div>
+  <p class="chart-caption">
+    n=250, mean 0.064%/day, std 0.813%/day, skew -0.28,
+    excess kurtosis 1.14. Jarque-Bera 16.68 vs. the 5% critical value
+    5.991 (chi-square, 2 df) &mdash;
+    rejects normality at the 5% level.
+    20.8% of days moved more than 1%;
+    2.0% moved more than 2%.
+    13 days exceeded 2 standard deviations (vs. 11.38 expected under a normal distribution),
+    and 4 exceeded 3 (vs. 0.67 expected).
+  </p>
+</section>
+
+
+<section id="cross-index">
+  <h2>Cross-index &amp; risk</h2>
+  <div class="chart-block"><h3>Correlation of daily log returns</h3><p class="chart-caption">Diverging scale: blue = positive correlation, red = negative, gray = near zero.</p><div class="chart" id="chart-corr"></div></div>
+
+  <table class="inline-table">
+    <caption>Beta and R&sup2; vs. the S&amp;P 500 (daily log returns)</caption>
+    <thead><tr><th>Index</th><th>Beta</th><th>R&sup2;</th></tr></thead>
+    <tbody><tr><td>Nasdaq 100</td><td>1.402</td><td>0.866</td></tr><tr><td>Dow Jones Industrial Average</td><td>0.815</td><td>0.699</td></tr><tr><td>Russell 2000</td><td>1.244</td><td>0.683</td></tr></tbody>
+  </table>
+
+  <table class="inline-table">
+    <caption>Risk-adjusted return (risk-free rate assumed 0%)</caption>
+    <thead><tr><th>Index</th><th>Sharpe</th><th>Sortino</th><th>Ann. vol</th><th>Corr. to S&amp;P 500</th></tr></thead>
+    <tbody><tr><td>S&amp;P 500</td><td>1.31</td><td>1.90</td><td>12.9%</td><td>1.000</td></tr><tr><td>Nasdaq 100</td><td>1.09</td><td>1.57</td><td>19.4%</td><td>0.930</td></tr><tr><td>Dow Jones Industrial Average</td><td>1.41</td><td>2.14</td><td>12.6%</td><td>0.836</td></tr><tr><td>Russell 2000</td><td>1.58</td><td>2.46</td><td>19.4%</td><td>0.827</td></tr></tbody>
+  </table>
+</section>
+
+
+<section id="rates">
+  <h2>Rates &amp; the yield curve</h2>
+  <span class="badge">Rates window: 2025-07-31 – 2026-07-29, 248 trading days — 3 fewer than the 251-day equity window above (no yield is published for 2026-07-30; the bond market was closed on 2025-10-13, 2025-11-11 while equities traded).</span>
+
+  <div class="chart-block"><h3>Treasury constant-maturity yields</h3><p class="chart-caption">Par yields in percent. These are yield levels, not bond returns.</p><div class="chart" id="chart-yields"></div></div>
+  <table class="inline-table">
+    <caption>Yield levels over the rates window</caption>
+    <thead><tr><th>Tenor</th><th>Start</th><th>End</th><th>Change</th><th>Low</th><th>High</th></tr></thead>
+    <tbody><tr><td>5-year Treasury</td><td>3.96%</td><td>4.37%</td><td>+41bp</td><td>3.51% (2026-02-27)</td><td>4.46% (2026-07-23)</td></tr><tr><td>10-year Treasury</td><td>4.37%</td><td>4.67%</td><td>+30bp</td><td>3.97% (2025-10-22)</td><td>4.71% (2026-07-23)</td></tr><tr><td>30-year Treasury</td><td>4.89%</td><td>5.20%</td><td>+31bp</td><td>4.54% (2025-10-22)</td><td>5.20% (2026-07-29)</td></tr></tbody>
+  </table>
+
+  <div class="chart-block"><h3>Yield curve spreads</h3><p class="chart-caption">Spreads in basis points. The zero line marks inversion; a spread below it means the shorter tenor yields more.</p><div class="chart" id="chart-curve"></div></div>
+  <p class="chart-caption">
+    The curve was a <strong>bear flattener</strong> over the window:
+    the 30-year rose 31bp while the 5-year rose
+    41bp, so the 10y&minus;5y spread
+    narrowed by 11bp.
+    No spread inverted at any point in the window.
+  </p>
+  <table class="inline-table">
+    <caption>Curve spreads (basis points)</caption>
+    <thead><tr><th>Spread</th><th>Start</th><th>End</th><th>Change</th><th>Min</th><th>Max</th><th>Ever inverted</th></tr></thead>
+    <tbody><tr><td>10y − 5y</td><td>41bp</td><td>30bp</td><td>-11bp</td><td>22bp</td><td>55bp</td><td>no</td></tr><tr><td>30y − 10y</td><td>52bp</td><td>53bp</td><td>+1bp</td><td>44bp</td><td>69bp</td><td>no</td></tr><tr><td>30y − 5y</td><td>93bp</td><td>83bp</td><td>-10bp</td><td>66bp</td><td>124bp</td><td>no</td></tr></tbody>
+  </table>
+
+  <div class="chart-block"><h3>Distribution of daily 10-year yield changes</h3><p class="chart-caption">Daily first differences in basis points, with a normal-density overlay of the same mean and variance.</p><div class="chart" id="chart-dy-hist"></div></div>
+  <table class="inline-table">
+    <caption>Daily yield-change statistics (245 paired sessions)</caption>
+    <thead><tr><th>Tenor</th><th>Daily SD (bp)</th><th>Annualized</th><th>Largest rise</th><th>Largest fall</th><th>Days &ge; 10bp</th></tr></thead>
+    <tbody><tr><td>5-year Treasury</td><td>4.62</td><td>73bp</td><td>+13bp (2026-03-20)</td><td>-19bp (2025-08-01)</td><td>10</td></tr><tr><td>10-year Treasury</td><td>4.06</td><td>64bp</td><td>+14bp (2026-03-20)</td><td>-14bp (2025-08-01)</td><td>3</td></tr><tr><td>30-year Treasury</td><td>3.63</td><td>58bp</td><td>+13bp (2026-03-20)</td><td>-10bp (2026-02-12)</td><td>4</td></tr></tbody>
+  </table>
+
+  <table class="inline-table">
+    <caption>Duration-approximated price impact &mdash; illustrative only</caption>
+    <thead><tr><th>Tenor</th><th>Assumed modified duration (yrs)</th><th>Approx. price return</th></tr></thead>
+    <tbody><tr><td>5-year Treasury</td><td>4.5</td><td>-1.8%</td></tr><tr><td>10-year Treasury</td><td>8.3</td><td>-2.5%</td></tr><tr><td>30-year Treasury</td><td>16.5</td><td>-5.1%</td></tr></tbody>
+  </table>
+  <p class="chart-caption">
+    First-order (&minus;D &times; &Delta;y) only, applied to the full-window yield change. It ignores
+    convexity, coupon carry, and roll-down, and is <strong>not</strong> the return of any bond index.
+    The assumed duration is the entire content of the figure &mdash; change the assumption and the
+    number changes with it.
+  </p>
+</section>
+
+
+<section id="cross-asset">
+  <h2>Stocks vs. bonds</h2>
+  <span class="badge">Paired sample: 245 sessions, 2025-08-01 – 2026-07-29 — every statistic below pairs an equity return with a same-session yield change.</span>
+
+  <div class="chart-block"><h3>Rolling 63-day correlation: S&amp;amp;P 500 returns vs. 10-year yield changes</h3><p class="chart-caption">Above zero, equities and yields moved together; below zero, they moved in opposite directions.</p><div class="chart" id="chart-rate-corr"></div></div>
+  <p class="chart-caption">
+    Full-sample correlation was -0.245 over 245 paired sessions. The rolling
+    63-day estimate ranged -0.71 (on 2026-06-05) to
+    0.20 (on 2025-12-09), ended at -0.57, and was
+    positive on 35.5% of the 183 days where it is
+    defined (from 2025-10-31).
+  </p>
+
+  <div class="chart-block"><h3>Correlation: daily index returns vs. daily yield changes</h3><p class="chart-caption">Both legs are first differences — equity returns against yield changes in basis points. Correlating levels against levels would be spurious.</p><div class="chart" id="chart-rate-corr-heat"></div></div>
+  <table class="inline-table">
+    <caption>Correlation of daily returns with daily yield changes (245 sessions)</caption>
+    <thead><tr><th>Index</th><th>5-year Treasury</th><th>10-year Treasury</th><th>30-year Treasury</th></tr></thead>
+    <tbody><tr><td>S&amp;P 500</td><td>-0.218</td><td>-0.245</td><td>-0.199</td></tr><tr><td>Nasdaq 100</td><td>-0.164</td><td>-0.199</td><td>-0.171</td></tr><tr><td>Dow Jones Industrial Average</td><td>-0.258</td><td>-0.288</td><td>-0.255</td></tr><tr><td>Russell 2000</td><td>-0.254</td><td>-0.280</td><td>-0.229</td></tr><tr><td>CBOE Volatility Index</td><td>0.129</td><td>0.144</td><td>0.118</td></tr></tbody>
+  </table>
+  <p class="chart-caption">
+    VIX correlates 0.144 with 10-year yield changes, the mirror image of the equity rows:
+    on this sample, rising yields tended to coincide with a firmer volatility bid. Descriptive only.
+  </p>
+
+  <table class="inline-table">
+    <caption>Sensitivity to a 10bp rise in the 10-year yield</caption>
+    <thead><tr><th>Index</th><th>Average move per +10bp</th><th>R&sup2;</th></tr></thead>
+    <tbody><tr><td>S&amp;P 500</td><td>-0.5%</td><td>0.060</td></tr><tr><td>Nasdaq 100</td><td>-0.6%</td><td>0.039</td></tr><tr><td>Dow Jones Industrial Average</td><td>-0.6%</td><td>0.083</td></tr><tr><td>Russell 2000</td><td>-0.8%</td><td>0.079</td></tr><tr><td>CBOE Volatility Index</td><td>+2.8%</td><td>0.021</td></tr></tbody>
+  </table>
+  <p class="chart-caption">
+    Estimated by ordinary least squares over 245 sessions. Read the R&sup2; first: it
+    bounds how much of daily equity variation rate moves account for at all.
+  </p>
+
+  <table class="inline-table">
+    <caption>S&amp;P 500 performance conditioned on the 10-year yield</caption>
+    <thead><tr><th>Session type</th><th>n</th><th>Mean return</th><th>Share positive</th></tr></thead>
+    <tbody><tr><td>10y yield rose</td><td>120</td><td>-13.3bp</td><td>45.0%</td></tr><tr><td>10y yield fell</td><td>109</td><td>+20.8bp</td><td>63.3%</td></tr><tr><td>10y yield unchanged</td><td>16</td><td>+36.8bp</td><td>81.2%</td></tr><tr><td>|10y move| &gt;= 10bp</td><td>3</td><td>-146.1bp</td><td>0.0%</td></tr></tbody>
+  </table>
+  <p class="chart-caption">
+    Means are shown in basis points beside their own sample size, because the buckets are very
+    unequal. Buckets with fewer than 10 sessions (|10y move| &gt;= 10bp) carry too few observations to generalize from and are reported for completeness only.
+  </p>
+</section>
+
+
+<section id="methodology">
+  <h2>Data &amp; methodology</h2>
+  <ul class="method-list">
+    <li>Source: Yahoo Finance daily OHLCV, fetched 2026-07-31T00:16:38.814715+00:00.</li>
+    <li>Analysis window: intersection of trading dates across all five symbols, 251 days.
+        Dates dropped for non-overlap: VIX: 2025-07-30, 2026-05-25 &mdash; 2026-05-25 is the Memorial Day holiday, on which
+        Yahoo carries a VIX print but equity markets were closed.</li>
+    <li>Volume excluded from analysis: RUT&#x27;s reported volume is ~99% identical to GSPC&#x27;s (a Yahoo composite-index artifact, not true constituent volume), VIX carries zero volume on every day, and the final GSPC session&#x27;s volume is provisional/unconsolidated.</li>
+    <li><code>adjclose</code> equals <code>close</code> for every symbol here (indices carry no dividend adjustment),
+        so every return in this report is a <strong>price return</strong>. A total-return comparison would run
+        roughly the dividend yield (historically ~1.2%/year for the S&amp;P 500) higher.</li>
+    <li>Simple returns are used for anything that compounds or aggregates: total return, monthly returns, rebasing,
+        drawdown, best/worst-day figures, Sharpe, and Sortino. Log returns are used for statistical/dependence
+        measures: volatility, skew, kurtosis, correlation, and beta.</li>
+    <li>Volatility is annualized with a 252-trading-day convention; CAGR uses a 365.25-calendar-day convention.</li>
+    <li>VIX is 30-day risk-neutral implied volatility in annualized percentage points, which is why it can share
+        one axis with annualized realized volatility &mdash; the units match.</li>
+    <li>All rolling windows (moving averages, rolling volatility) are trailing and right-aligned; the first
+        window&minus;1 observations are undefined and rendered as gaps, not filled.</li>
+    <li>ATR uses Wilder smoothing (exponential, &alpha; = 1/14) and is reported as a percentage of closing price.</li>
+    <li>Risk-free rate is assumed to be 0% for Sharpe and Sortino, shown explicitly beside each figure.</li>
+    <li>Skew and excess kurtosis use the bias-corrected Fisher-Pearson estimators (G1, G2).</li>
+    
+    <li><strong>Treasury data.</strong> FRED (Federal Reserve Bank of St. Louis), H.15 Treasury constant-maturity par yields. Manually downloaded by the analyst; not fetched by fetch_data.py, so no manifest.json entry exists for these series.
+        Series: DGS5 (sha256 14bf8dde2ce9…, 262 rows, 2025-07-29 to 2026-07-29), DGS10 (sha256 3505a395c292…, 262 rows, 2025-07-29 to 2026-07-29), DGS30 (sha256 2afce5c993d2…, 262 rows, 2025-07-29 to 2026-07-29). Units: percent per annum, constant-maturity (par) yield.</li>
+    <li><strong>Two windows, deliberately.</strong> Equity metrics use their own
+        251-day window (2025-07-31 to
+        2026-07-30); rates metrics use a 248-day window
+        (2025-07-31 to 2026-07-29); stock/bond statistics use a
+        245-session paired sample. Intersecting everything onto one
+        calendar would have shortened the equity window and changed every equity figure in this
+        report, so the windows are kept separate and disclosed wherever they apply.</li>
+    <li><strong>Nothing is forward-filled.</strong> 2025-10-13, 2025-11-11 were bond-market
+        closures on which equities traded, and no yield is published for
+        2026-07-30. Carrying the prior yield forward would have manufactured
+        zero-change days, biasing yield volatility downward and pulling stock/bond correlations
+        toward zero. Those sessions are dropped from the rates window instead.</li>
+    <li><strong>Yields are levels, not prices.</strong> Every yield statistic here is a first
+        difference expressed in basis points. No return, log return, or percentage change is
+        ever computed on a yield series.</li>
+    <li>Constant-maturity par yields are <strong>not</strong> bond total returns. The
+        duration-approximated price impact shown in the rates section is first-order
+        (&minus;D &times; &Delta;y) against an assumed modified duration, ignoring convexity,
+        coupon carry, and roll-down; it is not the return of any bond index.</li>
+    <li>Stock/bond correlations pair equity <em>returns</em> against yield <em>changes</em> —
+        both first differences. Correlating a price level against a yield level would be
+        spurious.</li>
+    <li>Sessions immediately following a bond-market-only closure are excluded from the paired
+        sample: the yield change would span two equity sessions while the equity return spans
+        one, so the two legs would not share a unit of observation. This falls out of projecting
+        yields onto the equity calendar before differencing, rather than from a hardcoded date
+        list.</li>
+    <li><strong>The risk-free rate remains 0%</strong> for Sharpe and Sortino even though
+        Treasury yields are now available. The 5-year yield carries term premium and duration
+        risk, so it is not a cash rate; substituting it would be a category error rather than a
+        refinement. The appropriate instrument is a 3-month bill, which this project does not
+        contain. Existing risk-adjusted figures are therefore unchanged.</li>
+    <li>No equity risk premium or Fed-model comparison is presented. That would require earnings
+        data, which this project does not contain, and it is not inferred.</li>
+  </ul>
+</section>
+
+<footer>Generated from data fetched 2026-07-31T00:16:38.814715+00:00. Source: Yahoo Finance daily OHLCV. Analysis window 2025-07-31 &ndash; 2026-07-30.</footer>
+</div>
+<script id="chart-data" type="application/json">{"charts": [{"id": "chart-rebased", "type": "line", "yFormat": "index", "endLabels": true, "dates": ["2025-07-31", "2025-08-01", "2025-08-04", "2025-08-05", "2025-08-06", "2025-08-07", "2025-08-08", "2025-08-11", "2025-08-12", "2025-08-13", "2025-08-14", "2025-08-15", "2025-08-18", "2025-08-19", "2025-08-20", "2025-08-21", "2025-08-22", "2025-08-25", "2025-08-26", "2025-08-27", "2025-08-28", "2025-08-29", "2025-09-02", "2025-09-03", "2025-09-04", "2025-09-05", "2025-09-08", "2025-09-09", "2025-09-10", "2025-09-11", "2025-09-12", "2025-09-15", "2025-09-16", "2025-09-17", "2025-09-18", "2025-09-19", "2025-09-22", "2025-09-23", "2025-09-24", "2025-09-25", "2025-09-26", "2025-09-29", "2025-09-30", "2025-10-01", "2025-10-02", "2025-10-03", "2025-10-06", "2025-10-07", "2025-10-08", "2025-10-09", "2025-10-10", "2025-10-13", "2025-10-14", "2025-10-15", "2025-10-16", "2025-10-17", "2025-10-20", "2025-10-21", "2025-10-22", "2025-10-23", "2025-10-24", "2025-10-27", "2025-10-28", "2025-10-29", "2025-10-30", "2025-10-31", "2025-11-03", "2025-11-04", "2025-11-05", "2025-11-06", "2025-11-07", "2025-11-10", "2025-11-11", "2025-11-12", "2025-11-13", "2025-11-14", "2025-11-17", "2025-11-18", "2025-11-19", "2025-11-20", "2025-11-21", "2025-11-24", "2025-11-25", "2025-11-26", "2025-11-28", "2025-12-01", "2025-12-02", "2025-12-03", "2025-12-04", "2025-12-05", "2025-12-08", "2025-12-09", "2025-12-10", "2025-12-11", "2025-12-12", "2025-12-15", "2025-12-16", "2025-12-17", "2025-12-18", "2025-12-19", "2025-12-22", "2025-12-23", "2025-12-24", "2025-12-26", "2025-12-29", "2025-12-30", "2025-12-31", "2026-01-02", "2026-01-05", "2026-01-06", "2026-01-07", "2026-01-08", "2026-01-09", "2026-01-12", "2026-01-13", "2026-01-14", "2026-01-15", "2026-01-16", "2026-01-20", "2026-01-21", "2026-01-22", "2026-01-23", "2026-01-26", "2026-01-27", "2026-01-28", "2026-01-29", "2026-01-30", "2026-02-02", "2026-02-03", "2026-02-04", "2026-02-05", "2026-02-06", "2026-02-09", "2026-02-10", "2026-02-11", "2026-02-12", "2026-02-13", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20", "2026-02-23", "2026-02-24", "2026-02-25", "2026-02-26", "2026-02-27", "2026-03-02", "2026-03-03", "2026-03-04", "2026-03-05", "2026-03-06", "2026-03-09", "2026-03-10", "2026-03-11", "2026-03-12", "2026-03-13", "2026-03-16", "2026-03-17", "2026-03-18", "2026-03-19", "2026-03-20", "2026-03-23", "2026-03-24", "2026-03-25", "2026-03-26", "2026-03-27", "2026-03-30", "2026-03-31", "2026-04-01", "2026-04-02", "2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-04", "2026-05-05", "2026-05-06", "2026-05-07", "2026-05-08", "2026-05-11", "2026-05-12", "2026-05-13", "2026-05-14", "2026-05-15", "2026-05-18", "2026-05-19", "2026-05-20", "2026-05-21", "2026-05-22", "2026-05-26", "2026-05-27", "2026-05-28", "2026-05-29", "2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04", "2026-06-05", "2026-06-08", "2026-06-09", "2026-06-10", "2026-06-11", "2026-06-12", "2026-06-15", "2026-06-16", "2026-06-17", "2026-06-18", "2026-06-22", "2026-06-23", "2026-06-24", "2026-06-25", "2026-06-26", "2026-06-29", "2026-06-30", "2026-07-01", "2026-07-02", "2026-07-06", "2026-07-07", "2026-07-08", "2026-07-09", "2026-07-10", "2026-07-13", "2026-07-14", "2026-07-15", "2026-07-16", "2026-07-17", "2026-07-20", "2026-07-21", "2026-07-22", "2026-07-23", "2026-07-24", "2026-07-27", "2026-07-28", "2026-07-29", "2026-07-30"], "series": [{"key": "GSPC", "label": "S\u0026P 500", "slot": 1, "values": [100.0, 98.4008, 99.8509, 99.3659, 100.0894, 100.0096, 100.7897, 100.5373, 101.6779, 102.0063, 102.0373, 101.7416, 101.7314, 101.1354, 100.8895, 100.4855, 102.0116, 101.5763, 101.9962, 102.2401, 102.5629, 101.9066, 101.2012, 101.7174, 102.5663, 102.2417, 102.457, 102.7324, 103.0389, 103.9133, 103.8631, 104.352, 104.2176, 104.1165, 104.6151, 105.1262, 105.5898, 105.0088, 104.7099, 104.1854, 104.8003, 105.0765, 105.5064, 105.8651, 105.9305, 105.9375, 106.3238, 105.9185, 106.5358, 106.2422, 103.3618, 104.9741, 104.8099, 105.2319, 104.5695, 105.1207, 106.2426, 106.246, 105.6789, 106.2948, 107.1348, 108.4514, 108.6996, 108.6948, 107.6182, 107.9, 108.0856, 106.8171, 107.2073, 106.0089, 106.1427, 107.7774, 108.0011, 108.0691, 106.2798, 106.2265, 105.2532, 104.3842, 104.776, 103.1449, 104.1581, 105.7692, 106.7276, 107.4648, 108.0402, 107.4651, 107.7291, 108.0501, 108.1669, 108.3764, 107.9995, 107.9049, 108.6332, 108.8591, 107.6982, 107.5263, 107.2699, 106.0264, 106.8677, 107.8101, 108.504, 108.9977, 109.3488, 109.3156, 108.9338, 108.784, 107.9836, 108.1882, 108.8756, 109.5503, 109.1734, 109.1818, 109.8888, 110.0622, 109.8487, 109.2629, 109.5448, 109.4744, 107.2163, 108.4587, 109.0539, 109.0895, 109.6356, 110.0831, 110.0741, 109.9319, 109.4589, 110.0491, 109.1242, 108.5707, 107.2406, 109.3528, 109.8658, 109.5028, 109.4974, 107.7826, 107.8364, 107.9476, 108.5485, 108.2421, 108.9933, 107.8613, 108.6866, 109.5709, 108.983, 108.5101, 108.5533, 107.5282, 108.3622, 107.7503, 106.3197, 107.2026, 106.9737, 106.8841, 105.2565, 104.6187, 105.6786, 105.9422, 104.5006, 104.2133, 102.6357, 103.8112, 103.4227, 103.9832, 102.1732, 100.4647, 100.0683, 102.9834, 103.7216, 103.8379, 104.2976, 104.3768, 106.9947, 107.6548, 107.5323, 108.6262, 109.9062, 110.7827, 111.0719, 112.4092, 112.1423, 111.4304, 112.596, 112.1307, 113.0248, 113.164, 112.6102, 112.5652, 113.7177, 114.0507, 113.5874, 114.5098, 116.1803, 115.7384, 116.7136, 116.933, 116.7456, 117.4285, 118.3275, 116.8646, 116.7786, 115.9987, 117.2506, 117.4517, 117.8894, 118.6095, 118.6291, 119.3116, 119.5708, 119.8847, 120.0396, 119.1547, 119.6378, 116.474, 116.8209, 116.5199, 114.6323, 116.6406, 117.2267, 119.1643, 118.487, 117.0475, 118.3171, 117.8787, 116.1856, 116.0714, 116.0599, 116.0052, 117.3682, 118.2978, 118.0434, 118.0435, 118.8983, 118.3686, 118.0352, 118.9963, 119.4971, 118.5499, 118.9955, 119.45, 118.8406, 117.6405, 117.4132, 118.453, 118.2915, 116.8614, 116.9194, 116.9384, 117.1845, 115.4078, 117.3241]}, {"key": "NDX", "label": "Nasdaq 100", "slot": 2, "values": [100.0, 98.0411, 99.8729, 99.1405, 100.4174, 100.7383, 101.6933, 101.3288, 102.675, 102.7174, 102.6459, 102.1274, 102.1347, 100.7178, 100.1355, 99.6747, 101.206, 100.8937, 101.323, 101.4977, 102.0903, 100.8498, 100.0559, 100.8473, 101.7869, 101.8706, 102.3438, 102.6776, 102.7184, 103.3355, 103.7646, 104.6328, 104.5487, 104.331, 105.3268, 106.0648, 106.6455, 105.8663, 105.5364, 105.0788, 105.5376, 106.0006, 106.2963, 106.8168, 107.2126, 106.7508, 107.5822, 106.9864, 108.2629, 108.0974, 104.3226, 106.5989, 105.8627, 106.5778, 106.1983, 106.8904, 108.2819, 108.2221, 107.1534, 108.0941, 109.2171, 111.2129, 112.0338, 112.4977, 110.8393, 111.3705, 111.865, 109.5511, 110.345, 108.2346, 107.9321, 110.3093, 109.9723, 109.9027, 107.6464, 107.71, 106.8128, 105.5344, 106.1263, 103.6018, 104.3994, 107.1312, 107.7536, 108.695, 109.5476, 109.1512, 110.0686, 110.2869, 110.1799, 110.6552, 110.3791, 110.5546, 111.0186, 110.6321, 108.5218, 107.9643, 108.2471, 106.1568, 107.7579, 109.1655, 109.6631, 110.2063, 110.5006, 110.4499, 109.9381, 109.6668, 108.7506, 108.5625, 109.403, 110.4298, 110.4909, 109.8586, 110.9748, 111.067, 110.8701, 109.6813, 110.0307, 109.954, 107.621, 109.0811, 109.907, 110.2823, 110.7463, 111.722, 112.0797, 111.4832, 110.0537, 110.8557, 109.133, 107.2061, 105.7307, 108.0009, 108.8294, 108.2243, 108.5413, 106.3291, 106.5234, 106.3893, 107.239, 106.8017, 107.7289, 106.4209, 107.5756, 109.0917, 107.8226, 107.5024, 107.6427, 106.4689, 108.078, 107.7624, 106.137, 107.5335, 107.487, 107.5238, 105.6657, 105.0073, 106.1901, 106.7288, 105.1984, 104.8977, 102.9289, 104.1798, 103.3781, 104.0695, 101.5887, 99.6324, 98.8598, 102.2485, 103.4536, 103.5636, 104.1952, 104.2391, 107.2575, 108.0281, 108.1756, 109.3272, 111.301, 112.8626, 113.4157, 114.8777, 114.5241, 114.0466, 116.0184, 115.3523, 117.5964, 117.605, 116.4134, 117.0938, 118.2358, 119.348, 119.0959, 120.6603, 123.1761, 123.0244, 125.9145, 126.2835, 125.1815, 126.4829, 127.4018, 125.4417, 124.8782, 124.1222, 126.1846, 126.4412, 126.9769, 129.2151, 129.0956, 130.1737, 130.6444, 131.4226, 132.0546, 131.6698, 130.9659, 124.7198, 126.6867, 125.2664, 122.7835, 126.8241, 127.6415, 131.5521, 129.0722, 127.7922, 130.9589, 130.7043, 126.3981, 125.8502, 126.7989, 125.4117, 128.2393, 130.3997, 128.3874, 126.3204, 127.9082, 125.6476, 125.9902, 128.0341, 128.4562, 126.0399, 127.4276, 127.0671, 125.0134, 123.148, 123.1979, 125.5708, 124.8943, 122.5543, 121.1482, 120.7644, 119.5753, 117.1168, 121.0535]}, {"key": "DJI", "label": "Dow Jones Industrial Average", "slot": 3, "values": [100.0, 98.7709, 100.0967, 99.9564, 100.1408, 99.6321, 100.1011, 99.6468, 100.7424, 101.793, 101.7681, 101.8471, 101.7694, 101.793, 101.8294, 101.4831, 103.4007, 102.6093, 102.9165, 103.25, 103.4124, 103.2039, 102.6395, 102.5838, 103.377, 102.8775, 103.136, 103.5811, 103.0816, 104.4799, 103.8595, 103.9711, 103.6866, 104.2767, 104.5579, 104.9496, 105.0997, 104.8986, 104.51, 104.1158, 104.7955, 104.9514, 105.1368, 105.2347, 105.4128, 105.9534, 105.81, 105.6015, 105.5988, 105.0473, 103.056, 104.3883, 104.848, 104.8092, 104.1269, 104.6671, 105.8363, 106.3306, 105.573, 105.8998, 106.9705, 107.7352, 108.1018, 107.9332, 107.6843, 107.7766, 107.2641, 106.6943, 107.2059, 106.3024, 106.4719, 107.3365, 108.6039, 109.3445, 107.5372, 106.8353, 105.5726, 104.443, 104.5496, 103.6738, 104.7913, 105.2509, 106.756, 107.469, 108.1245, 107.1568, 107.5763, 108.5018, 108.4294, 108.6651, 108.1764, 107.7708, 108.898, 110.3624, 109.8051, 109.711, 109.026, 108.5087, 108.658, 109.0728, 109.589, 109.7696, 110.4239, 110.3782, 109.8139, 109.5989, 108.9105, 109.6336, 110.9814, 112.0802, 111.0242, 111.6361, 112.1753, 112.3705, 111.4682, 111.3722, 112.0357, 111.8473, 109.8743, 111.2081, 111.9033, 111.2568, 111.9676, 111.0408, 111.0685, 111.1953, 110.7894, 111.9569, 111.5792, 112.169, 110.8263, 113.5612, 113.607, 113.7254, 113.5742, 112.0573, 112.1682, 112.2413, 112.5347, 111.9285, 112.4515, 110.5891, 111.4285, 112.1256, 112.1643, 110.9831, 110.8173, 109.903, 110.4426, 108.6646, 107.6377, 108.1798, 108.1021, 107.4467, 105.7712, 105.5006, 106.3797, 106.4859, 104.7453, 104.2837, 103.2777, 104.7076, 104.5163, 105.2084, 104.1448, 102.3468, 102.459, 105.009, 105.5171, 105.3787, 105.7531, 105.5595, 108.563, 109.1881, 108.5781, 109.2617, 109.9817, 109.8179, 110.0785, 112.047, 112.0359, 111.3716, 112.1435, 111.7363, 111.5559, 111.4133, 111.3547, 110.72, 112.5108, 112.1644, 110.9015, 111.7089, 113.0965, 112.3858, 112.4135, 112.6294, 112.7565, 112.6039, 113.4429, 112.2254, 112.5878, 111.8577, 113.3203, 113.9464, 114.6127, 114.3452, 114.759, 114.815, 115.6386, 115.7438, 116.2625, 114.856, 116.8384, 115.2632, 115.0802, 115.2753, 113.1151, 115.2223, 116.0234, 117.0856, 117.8303, 116.6812, 116.8447, 117.1801, 117.0761, 117.4887, 117.6512, 117.5503, 118.2451, 118.5544, 118.5227, 119.8706, 120.2237, 119.9274, 118.6205, 118.9355, 119.2745, 118.961, 118.9828, 119.3235, 119.0841, 118.1628, 117.4668, 118.3401, 118.3263, 117.1777, 117.7115, 118.3071, 119.5245, 116.9114, 118.3025]}, {"key": "RUT", "label": "Russell 2000", "slot": 4, "values": [100.0, 97.9712, 100.0294, 100.6339, 100.4359, 100.1388, 100.3061, 100.2198, 103.2162, 105.2635, 103.9532, 103.3853, 103.7447, 102.9372, 102.6089, 102.8237, 106.7958, 105.7658, 106.6444, 107.3316, 107.5401, 106.9979, 106.3554, 106.2542, 107.5943, 108.1116, 108.2852, 107.6943, 107.522, 109.4898, 108.3833, 108.7482, 108.6533, 108.8482, 111.5773, 110.7214, 111.3802, 111.1166, 110.0979, 109.0154, 110.0681, 110.1101, 110.1657, 110.4311, 111.1609, 111.9608, 112.4206, 111.1577, 112.3139, 111.6293, 108.2717, 111.2934, 112.8343, 113.9308, 111.5466, 110.8751, 113.0337, 112.4812, 110.8471, 112.2537, 113.6468, 113.962, 113.3385, 112.351, 111.4982, 112.1054, 111.7374, 109.7525, 111.4453, 109.3672, 110.0002, 111.0325, 111.1514, 110.8132, 107.7467, 107.9841, 105.8658, 106.1985, 106.1601, 104.2258, 107.1413, 109.1619, 111.4996, 112.4102, 113.0572, 111.642, 111.4543, 113.5867, 114.4467, 114.009, 113.9864, 114.2242, 115.7331, 117.1347, 115.3646, 114.4245, 113.9104, 112.6896, 113.3936, 114.3685, 115.6955, 114.897, 115.2117, 114.5909, 113.933, 113.0645, 112.2198, 113.4094, 115.2045, 116.7861, 116.4479, 117.7361, 118.6544, 119.173, 119.0564, 119.8942, 120.9305, 121.0743, 119.6103, 121.9981, 122.9295, 120.6864, 120.2573, 120.5751, 119.9806, 120.0362, 118.1805, 119.3806, 119.7522, 118.6693, 116.5487, 120.7397, 121.5857, 121.1661, 120.7004, 118.2751, 119.6708, 119.6659, 120.2094, 120.5023, 120.4431, 118.5084, 119.9254, 120.4228, 121.054, 119.0225, 120.0886, 117.9373, 119.1875, 116.9068, 114.1817, 115.4645, 115.2117, 114.9775, 112.54, 112.1357, 113.1865, 113.9416, 112.072, 112.7986, 110.2548, 112.7769, 113.2837, 114.6827, 112.7357, 110.7635, 109.1497, 112.8737, 113.5971, 114.396, 114.8753, 115.0702, 118.4844, 119.2011, 118.9424, 120.7465, 122.3372, 122.6984, 122.967, 125.5578, 126.284, 125.0184, 125.9413, 125.4765, 126.0145, 126.0683, 124.6151, 123.8654, 126.5982, 127.182, 126.4215, 128.637, 130.5256, 128.3942, 129.3699, 129.7963, 128.5389, 128.5886, 129.4549, 126.2994, 125.4765, 124.2091, 127.3877, 128.5669, 129.7326, 132.0525, 132.0254, 132.7773, 131.9983, 131.3843, 132.5689, 130.8304, 132.7213, 128.117, 129.1081, 129.6326, 128.2056, 132.0747, 133.1128, 134.0669, 132.8963, 131.9368, 134.7306, 135.8443, 134.5367, 135.0408, 136.0007, 136.1011, 136.1165, 136.7472, 136.2146, 135.4695, 136.0767, 134.8536, 133.6735, 135.308, 134.642, 133.5279, 134.052, 134.5719, 134.4955, 133.9371, 133.0423, 135.0756, 133.834, 132.9397, 132.4803, 133.296, 133.5564, 131.4091, 133.2083]}]}, {"id": "chart-sma", "type": "line", "yFormat": "price", "endLabels": false, "dates": ["2025-07-31", "2025-08-01", "2025-08-04", "2025-08-05", "2025-08-06", "2025-08-07", "2025-08-08", "2025-08-11", "2025-08-12", "2025-08-13", "2025-08-14", "2025-08-15", "2025-08-18", "2025-08-19", "2025-08-20", "2025-08-21", "2025-08-22", "2025-08-25", "2025-08-26", "2025-08-27", "2025-08-28", "2025-08-29", "2025-09-02", "2025-09-03", "2025-09-04", "2025-09-05", "2025-09-08", "2025-09-09", "2025-09-10", "2025-09-11", "2025-09-12", "2025-09-15", "2025-09-16", "2025-09-17", "2025-09-18", "2025-09-19", "2025-09-22", "2025-09-23", "2025-09-24", "2025-09-25", "2025-09-26", "2025-09-29", "2025-09-30", "2025-10-01", "2025-10-02", "2025-10-03", "2025-10-06", "2025-10-07", "2025-10-08", "2025-10-09", "2025-10-10", "2025-10-13", "2025-10-14", "2025-10-15", "2025-10-16", "2025-10-17", "2025-10-20", "2025-10-21", "2025-10-22", "2025-10-23", "2025-10-24", "2025-10-27", "2025-10-28", "2025-10-29", "2025-10-30", "2025-10-31", "2025-11-03", "2025-11-04", "2025-11-05", "2025-11-06", "2025-11-07", "2025-11-10", "2025-11-11", "2025-11-12", "2025-11-13", "2025-11-14", "2025-11-17", "2025-11-18", "2025-11-19", "2025-11-20", "2025-11-21", "2025-11-24", "2025-11-25", "2025-11-26", "2025-11-28", "2025-12-01", "2025-12-02", "2025-12-03", "2025-12-04", "2025-12-05", "2025-12-08", "2025-12-09", "2025-12-10", "2025-12-11", "2025-12-12", "2025-12-15", "2025-12-16", "2025-12-17", "2025-12-18", "2025-12-19", "2025-12-22", "2025-12-23", "2025-12-24", "2025-12-26", "2025-12-29", "2025-12-30", "2025-12-31", "2026-01-02", "2026-01-05", "2026-01-06", "2026-01-07", "2026-01-08", "2026-01-09", "2026-01-12", "2026-01-13", "2026-01-14", "2026-01-15", "2026-01-16", "2026-01-20", "2026-01-21", "2026-01-22", "2026-01-23", "2026-01-26", "2026-01-27", "2026-01-28", "2026-01-29", "2026-01-30", "2026-02-02", "2026-02-03", "2026-02-04", "2026-02-05", "2026-02-06", "2026-02-09", "2026-02-10", "2026-02-11", "2026-02-12", "2026-02-13", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20", "2026-02-23", "2026-02-24", "2026-02-25", "2026-02-26", "2026-02-27", "2026-03-02", "2026-03-03", "2026-03-04", "2026-03-05", "2026-03-06", "2026-03-09", "2026-03-10", "2026-03-11", "2026-03-12", "2026-03-13", "2026-03-16", "2026-03-17", "2026-03-18", "2026-03-19", "2026-03-20", "2026-03-23", "2026-03-24", "2026-03-25", "2026-03-26", "2026-03-27", "2026-03-30", "2026-03-31", "2026-04-01", "2026-04-02", "2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-04", "2026-05-05", "2026-05-06", "2026-05-07", "2026-05-08", "2026-05-11", "2026-05-12", "2026-05-13", "2026-05-14", "2026-05-15", "2026-05-18", "2026-05-19", "2026-05-20", "2026-05-21", "2026-05-22", "2026-05-26", "2026-05-27", "2026-05-28", "2026-05-29", "2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04", "2026-06-05", "2026-06-08", "2026-06-09", "2026-06-10", "2026-06-11", "2026-06-12", "2026-06-15", "2026-06-16", "2026-06-17", "2026-06-18", "2026-06-22", "2026-06-23", "2026-06-24", "2026-06-25", "2026-06-26", "2026-06-29", "2026-06-30", "2026-07-01", "2026-07-02", "2026-07-06", "2026-07-07", "2026-07-08", "2026-07-09", "2026-07-10", "2026-07-13", "2026-07-14", "2026-07-15", "2026-07-16", "2026-07-17", "2026-07-20", "2026-07-21", "2026-07-22", "2026-07-23", "2026-07-24", "2026-07-27", "2026-07-28", "2026-07-29", "2026-07-30"], "series": [{"key": "close", "label": "S\u0026P 500 close", "slot": 1, "values": [6339.3901, 6238.0098, 6329.9399, 6299.1899, 6345.0601, 6340.0, 6389.4502, 6373.4502, 6445.7598, 6466.5801, 6468.54, 6449.7998, 6449.1499, 6411.3701, 6395.7798, 6370.1699, 6466.9102, 6439.3198, 6465.9399, 6481.3999, 6501.8599, 6460.2598, 6415.54, 6448.2598, 6502.0801, 6481.5, 6495.1499, 6512.6099, 6532.04, 6587.4702, 6584.29, 6615.2798, 6606.7598, 6600.3501, 6631.96, 6664.3599, 6693.75, 6656.9199, 6637.9702, 6604.7202, 6643.7002, 6661.21, 6688.46, 6711.2002, 6715.3501, 6715.79, 6740.2798, 6714.5898, 6753.7202, 6735.1099, 6552.5098, 6654.7202, 6644.3101, 6671.0601, 6629.0698, 6664.0098, 6735.1299, 6735.3501, 6699.3999, 6738.4399, 6791.6899, 6875.1602, 6890.8901, 6890.5898, 6822.3398, 6840.2002, 6851.9702, 6771.5498, 6796.29, 6720.3198, 6728.7998, 6832.4302, 6846.6099, 6850.9199, 6737.4902, 6734.1099, 6672.4102, 6617.3198, 6642.1602, 6538.7598, 6602.9902, 6705.1201, 6765.8799, 6812.6099, 6849.0898, 6812.6299, 6829.3701, 6849.7202, 6857.1201, 6870.3999, 6846.5098, 6840.5098, 6886.6802, 6901.0, 6827.4102, 6816.5098, 6800.2598, 6721.4302, 6774.7598, 6834.5, 6878.4902, 6909.79, 6932.0498, 6929.9399, 6905.7402, 6896.2402, 6845.5, 6858.4702, 6902.0498, 6944.8198, 6920.9302, 6921.46, 6966.2798, 6977.27, 6963.7402, 6926.6001, 6944.4702, 6940.0098, 6796.8599, 6875.6201, 6913.3501, 6915.6099, 6950.23, 6978.6001, 6978.0298, 6969.0098, 6939.0298, 6976.4399, 6917.8101, 6882.7202, 6798.3999, 6932.2998, 6964.8198, 6941.8101, 6941.4702, 6832.7598, 6836.1699, 6843.2202, 6881.3101, 6861.8901, 6909.5098, 6837.75, 6890.0698, 6946.1299, 6908.8599, 6878.8799, 6881.6201, 6816.6299, 6869.5, 6830.71, 6740.02, 6795.9902, 6781.48, 6775.7998, 6672.6201, 6632.1899, 6699.3799, 6716.0898, 6624.7002, 6606.4902, 6506.48, 6581.0, 6556.3701, 6591.8999, 6477.1602, 6368.8501, 6343.7202, 6528.52, 6575.3198, 6582.6899, 6611.8301, 6616.8501, 6782.8101, 6824.6602, 6816.8901, 6886.2402, 6967.3799, 7022.9502, 7041.2798, 7126.0601, 7109.1401, 7064.0098, 7137.8999, 7108.3999, 7165.0801, 7173.9102, 7138.7998, 7135.9502, 7209.0098, 7230.1201, 7200.75, 7259.2202, 7365.1201, 7337.1099, 7398.9302, 7412.8398, 7400.96, 7444.25, 7501.2402, 7408.5, 7403.0498, 7353.6099, 7432.9702, 7445.7202, 7473.4702, 7519.1201, 7520.3599, 7563.6299, 7580.0601, 7599.96, 7609.7798, 7553.6802, 7584.3101, 7383.7402, 7405.73, 7386.6499, 7266.9902, 7394.2998, 7431.46, 7554.29, 7511.3501, 7420.1001, 7500.5801, 7472.79, 7365.46, 7358.2202, 7357.4902, 7354.02, 7440.4302, 7499.3599, 7483.23, 7483.2402, 7537.4302, 7503.8501, 7482.71, 7543.6401, 7575.3901, 7515.3398, 7543.5898, 7572.3999, 7533.77, 7457.6899, 7443.2798, 7509.2002, 7498.96, 7408.2998, 7411.98, 7413.1802, 7428.7798, 7316.1499, 7437.6299]}, {"key": "sma50", "label": "50-day SMA", "slot": 2, "values": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 6525.555, 6529.8174, 6538.1516, 6544.439, 6551.8764, 6557.5566, 6564.0368, 6570.9504, 6578.1884, 6583.2612, 6588.6984, 6595.1614, 6603.6686, 6612.5034, 6622.0878, 6630.619, 6640.0196, 6647.7208, 6654.3654, 6660.9724, 6665.7508, 6670.2896, 6677.733, 6686.3544, 6694.4076, 6699.1158, 6704.168, 6707.7132, 6709.8074, 6712.0098, 6711.0356, 6711.4096, 6713.2064, 6716.3888, 6720.634, 6724.9766, 6727.942, 6730.6544, 6734.5104, 6738.8934, 6744.207, 6748.2632, 6751.8492, 6755.8136, 6759.6096, 6761.8508, 6763.8652, 6765.0648, 6765.2016, 6765.6224, 6767.6102, 6774.1298, 6779.2312, 6784.986, 6790.1636, 6795.697, 6800.3416, 6802.549, 6805.0114, 6809.0644, 6813.192, 6815.7768, 6816.7028, 6818.2106, 6819.9442, 6822.7722, 6824.5002, 6826.3502, 6829.7194, 6829.7308, 6832.8368, 6836.5278, 6838.1914, 6840.2638, 6842.8174, 6847.6282, 6852.3262, 6857.6586, 6864.841, 6870.354, 6877.2332, 6881.1414, 6885.685, 6889.6638, 6892.2478, 6894.0954, 6894.498, 6894.634, 6894.504, 6894.9878, 6894.8176, 6896.0776, 6896.0224, 6896.0902, 6896.9928, 6898.6218, 6899.8692, 6901.4964, 6903.4004, 6905.2952, 6905.2194, 6902.45, 6900.174, 6897.1626, 6894.0798, 6889.4174, 6884.1364, 6881.214, 6878.3664, 6872.8194, 6866.0528, 6857.7638, 6850.9546, 6842.7564, 6835.049, 6825.3174, 6814.1624, 6802.1474, 6793.9176, 6789.4868, 6783.6282, 6777.5978, 6771.6226, 6768.2742, 6765.1954, 6761.9726, 6760.3172, 6760.8842, 6761.8144, 6764.2838, 6769.1506, 6775.3654, 6777.9996, 6781.4612, 6784.793, 6789.2652, 6796.0882, 6802.1408, 6807.9954, 6814.5494, 6821.914, 6827.7388, 6836.1682, 6845.6692, 6853.4888, 6863.2902, 6873.9694, 6884.3562, 6896.9086, 6909.5434, 6921.0992, 6934.3598, 6945.5122, 6958.542, 6971.9404, 6987.9574, 7005.696, 7022.1156, 7039.0664, 7058.1736, 7078.043, 7100.109, 7119.5626, 7140.1214, 7155.9582, 7174.5296, 7194.8856, 7213.351, 7230.6666, 7247.7894, 7267.2214, 7285.2118, 7301.2768, 7315.6322, 7328.5948, 7339.5662, 7349.0058, 7356.808, 7363.4294, 7371.4124, 7378.8784, 7386.3602, 7394.7448, 7402.7354, 7410.6444, 7416.997, 7424.3916, 7433.1234, 7440.7112, 7447.4028, 7454.2484, 7460.9088, 7464.8782, 7466.4414, 7469.8832, 7471.8838, 7471.793, 7472.0134, 7471.392, 7469.9428, 7468.0958, 7468.7874]}, {"key": "sma200", "label": "200-day SMA", "slot": 3, "values": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 6779.8709, 6785.1892, 6790.7672, 6796.2824, 6802.015, 6807.6571, 6813.5527, 6819.2072, 6825.1581, 6830.8296, 6836.4965, 6842.2027, 6847.7221, 6853.3979, 6858.2598, 6863.3095, 6868.3919, 6872.3923, 6877.1672, 6881.9948, 6887.3593, 6892.4067, 6897.2059, 6902.6311, 6907.7538, 6912.0707, 6916.4543, 6920.766, 6924.9731, 6929.515, 6934.0745, 6938.5692, 6942.909, 6947.5623, 6952.0798, 6956.3336, 6960.73, 6965.1382, 6969.4303, 6973.9584, 6978.7968, 6983.2471, 6987.2295, 6991.0036, 6994.9936, 6998.9117, 7002.3742, 7005.7327, 7009.2257, 7012.601, 7015.5062, 7019.9318]}]}, {"id": "chart-monthly", "type": "divergingBar", "labels": ["2025-08", "2025-09", "2025-10", "2025-11", "2025-12", "2026-01", "2026-02", "2026-03", "2026-04", "2026-05", "2026-06", "2026-07"], "values": [1.91, 3.53, 2.27, 0.13, -0.05, 1.37, -0.8699999999999999, -5.09, 10.42, 5.1499999999999995, -1.06, -0.8200000000000001]}, {"id": "chart-drawdown", "type": "area", "yFormat": "pct", "endLabels": false, "dates": ["2025-07-31", "2025-08-01", "2025-08-04", "2025-08-05", "2025-08-06", "2025-08-07", "2025-08-08", "2025-08-11", "2025-08-12", "2025-08-13", "2025-08-14", "2025-08-15", "2025-08-18", "2025-08-19", "2025-08-20", "2025-08-21", "2025-08-22", "2025-08-25", "2025-08-26", "2025-08-27", "2025-08-28", "2025-08-29", "2025-09-02", "2025-09-03", "2025-09-04", "2025-09-05", "2025-09-08", "2025-09-09", "2025-09-10", "2025-09-11", "2025-09-12", "2025-09-15", "2025-09-16", "2025-09-17", "2025-09-18", "2025-09-19", "2025-09-22", "2025-09-23", "2025-09-24", "2025-09-25", "2025-09-26", "2025-09-29", "2025-09-30", "2025-10-01", "2025-10-02", "2025-10-03", "2025-10-06", "2025-10-07", "2025-10-08", "2025-10-09", "2025-10-10", "2025-10-13", "2025-10-14", "2025-10-15", "2025-10-16", "2025-10-17", "2025-10-20", "2025-10-21", "2025-10-22", "2025-10-23", "2025-10-24", "2025-10-27", "2025-10-28", "2025-10-29", "2025-10-30", "2025-10-31", "2025-11-03", "2025-11-04", "2025-11-05", "2025-11-06", "2025-11-07", "2025-11-10", "2025-11-11", "2025-11-12", "2025-11-13", "2025-11-14", "2025-11-17", "2025-11-18", "2025-11-19", "2025-11-20", "2025-11-21", "2025-11-24", "2025-11-25", "2025-11-26", "2025-11-28", "2025-12-01", "2025-12-02", "2025-12-03", "2025-12-04", "2025-12-05", "2025-12-08", "2025-12-09", "2025-12-10", "2025-12-11", "2025-12-12", "2025-12-15", "2025-12-16", "2025-12-17", "2025-12-18", "2025-12-19", "2025-12-22", "2025-12-23", "2025-12-24", "2025-12-26", "2025-12-29", "2025-12-30", "2025-12-31", "2026-01-02", "2026-01-05", "2026-01-06", "2026-01-07", "2026-01-08", "2026-01-09", "2026-01-12", "2026-01-13", "2026-01-14", "2026-01-15", "2026-01-16", "2026-01-20", "2026-01-21", "2026-01-22", "2026-01-23", "2026-01-26", "2026-01-27", "2026-01-28", "2026-01-29", "2026-01-30", "2026-02-02", "2026-02-03", "2026-02-04", "2026-02-05", "2026-02-06", "2026-02-09", "2026-02-10", "2026-02-11", "2026-02-12", "2026-02-13", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20", "2026-02-23", "2026-02-24", "2026-02-25", "2026-02-26", "2026-02-27", "2026-03-02", "2026-03-03", "2026-03-04", "2026-03-05", "2026-03-06", "2026-03-09", "2026-03-10", "2026-03-11", "2026-03-12", "2026-03-13", "2026-03-16", "2026-03-17", "2026-03-18", "2026-03-19", "2026-03-20", "2026-03-23", "2026-03-24", "2026-03-25", "2026-03-26", "2026-03-27", "2026-03-30", "2026-03-31", "2026-04-01", "2026-04-02", "2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-04", "2026-05-05", "2026-05-06", "2026-05-07", "2026-05-08", "2026-05-11", "2026-05-12", "2026-05-13", "2026-05-14", "2026-05-15", "2026-05-18", "2026-05-19", "2026-05-20", "2026-05-21", "2026-05-22", "2026-05-26", "2026-05-27", "2026-05-28", "2026-05-29", "2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04", "2026-06-05", "2026-06-08", "2026-06-09", "2026-06-10", "2026-06-11", "2026-06-12", "2026-06-15", "2026-06-16", "2026-06-17", "2026-06-18", "2026-06-22", "2026-06-23", "2026-06-24", "2026-06-25", "2026-06-26", "2026-06-29", "2026-06-30", "2026-07-01", "2026-07-02", "2026-07-06", "2026-07-07", "2026-07-08", "2026-07-09", "2026-07-10", "2026-07-13", "2026-07-14", "2026-07-15", "2026-07-16", "2026-07-17", "2026-07-20", "2026-07-21", "2026-07-22", "2026-07-23", "2026-07-24", "2026-07-27", "2026-07-28", "2026-07-29", "2026-07-30"], "series": [{"key": "dd", "label": "Drawdown", "slot": 1, "values": [0.0, -1.6, -0.15, -0.63, 0.0, -0.08, 0.0, -0.25, 0.0, 0.0, 0.0, -0.29, -0.3, -0.88, -1.1199999999999999, -1.52, -0.03, -0.44999999999999996, -0.04, 0.0, 0.0, -0.64, -1.3299999999999998, -0.8200000000000001, 0.0, -0.32, -0.11, 0.0, 0.0, 0.0, -0.05, 0.0, -0.13, -0.22999999999999998, 0.0, 0.0, 0.0, -0.5499999999999999, -0.83, -1.3299999999999998, -0.75, -0.49, -0.08, 0.0, 0.0, 0.0, 0.0, -0.38, 0.0, -0.27999999999999997, -2.98, -1.47, -1.6199999999999999, -1.22, -1.8499999999999999, -1.3299999999999998, -0.27999999999999997, -0.27, -0.8, -0.22999999999999998, 0.0, 0.0, 0.0, -0.0, -0.9900000000000001, -0.74, -0.5599999999999999, -1.73, -1.37, -2.48, -2.35, -0.8500000000000001, -0.64, -0.58, -2.23, -2.2800000000000002, -3.17, -3.9699999999999998, -3.61, -5.11, -4.18, -2.7, -1.81, -1.1400000000000001, -0.61, -1.1400000000000001, -0.89, -0.6, -0.49, -0.3, -0.64, -0.73, -0.06, 0.0, -1.0699999999999998, -1.22, -1.46, -2.6, -1.83, -0.96, -0.33, 0.0, 0.0, -0.03, -0.38, -0.52, -1.25, -1.06, -0.43, 0.0, -0.33999999999999997, -0.33999999999999997, 0.0, 0.0, -0.19, -0.73, -0.47000000000000003, -0.53, -2.59, -1.46, -0.9199999999999999, -0.88, -0.38999999999999996, 0.0, -0.01, -0.13999999999999999, -0.5700000000000001, -0.03, -0.8699999999999999, -1.37, -2.58, -0.66, -0.2, -0.53, -0.53, -2.09, -2.04, -1.94, -1.39, -1.67, -0.9900000000000001, -2.02, -1.27, -0.47000000000000003, -1.0, -1.43, -1.39, -2.32, -1.5599999999999998, -2.12, -3.42, -2.62, -2.82, -2.91, -4.38, -4.96, -4.0, -3.7600000000000002, -5.07, -5.33, -6.77, -5.7, -6.05, -5.54, -7.19, -8.74, -9.1, -6.45, -5.779999999999999, -5.67, -5.26, -5.18, -2.81, -2.21, -2.32, -1.32, -0.16, 0.0, 0.0, 0.0, -0.24, -0.8699999999999999, 0.0, -0.41000000000000003, 0.0, 0.0, -0.49, -0.53, 0.0, 0.0, -0.41000000000000003, 0.0, 0.0, -0.38, 0.0, 0.0, -0.16, 0.0, 0.0, -1.24, -1.31, -1.97, -0.91, -0.74, -0.37, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, -0.74, -0.33, -2.97, -2.68, -2.93, -4.5, -2.83, -2.34, -0.73, -1.29, -2.4899999999999998, -1.43, -1.7999999999999998, -3.2099999999999995, -3.3099999999999996, -3.32, -3.36, -2.23, -1.4500000000000002, -1.66, -1.66, -0.95, -1.39, -1.67, -0.8699999999999999, -0.44999999999999996, -1.24, -0.8699999999999999, -0.49, -1.0, -2.0, -2.19, -1.32, -1.46, -2.65, -2.6, -2.58, -2.3800000000000003, -3.8600000000000003, -2.26]}]}, {"id": "chart-vol", "type": "line", "yFormat": "pct", "endLabels": true, "dates": ["2025-08-01", "2025-08-04", "2025-08-05", "2025-08-06", "2025-08-07", "2025-08-08", "2025-08-11", "2025-08-12", "2025-08-13", "2025-08-14", "2025-08-15", "2025-08-18", "2025-08-19", "2025-08-20", "2025-08-21", "2025-08-22", "2025-08-25", "2025-08-26", "2025-08-27", "2025-08-28", "2025-08-29", "2025-09-02", "2025-09-03", "2025-09-04", "2025-09-05", "2025-09-08", "2025-09-09", "2025-09-10", "2025-09-11", "2025-09-12", "2025-09-15", "2025-09-16", "2025-09-17", "2025-09-18", "2025-09-19", "2025-09-22", "2025-09-23", "2025-09-24", "2025-09-25", "2025-09-26", "2025-09-29", "2025-09-30", "2025-10-01", "2025-10-02", "2025-10-03", "2025-10-06", "2025-10-07", "2025-10-08", "2025-10-09", "2025-10-10", "2025-10-13", "2025-10-14", "2025-10-15", "2025-10-16", "2025-10-17", "2025-10-20", "2025-10-21", "2025-10-22", "2025-10-23", "2025-10-24", "2025-10-27", "2025-10-28", "2025-10-29", "2025-10-30", "2025-10-31", "2025-11-03", "2025-11-04", "2025-11-05", "2025-11-06", "2025-11-07", "2025-11-10", "2025-11-11", "2025-11-12", "2025-11-13", "2025-11-14", "2025-11-17", "2025-11-18", "2025-11-19", "2025-11-20", "2025-11-21", "2025-11-24", "2025-11-25", "2025-11-26", "2025-11-28", "2025-12-01", "2025-12-02", "2025-12-03", "2025-12-04", "2025-12-05", "2025-12-08", "2025-12-09", "2025-12-10", "2025-12-11", "2025-12-12", "2025-12-15", "2025-12-16", "2025-12-17", "2025-12-18", "2025-12-19", "2025-12-22", "2025-12-23", "2025-12-24", "2025-12-26", "2025-12-29", "2025-12-30", "2025-12-31", "2026-01-02", "2026-01-05", "2026-01-06", "2026-01-07", "2026-01-08", "2026-01-09", "2026-01-12", "2026-01-13", "2026-01-14", "2026-01-15", "2026-01-16", "2026-01-20", "2026-01-21", "2026-01-22", "2026-01-23", "2026-01-26", "2026-01-27", "2026-01-28", "2026-01-29", "2026-01-30", "2026-02-02", "2026-02-03", "2026-02-04", "2026-02-05", "2026-02-06", "2026-02-09", "2026-02-10", "2026-02-11", "2026-02-12", "2026-02-13", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20", "2026-02-23", "2026-02-24", "2026-02-25", "2026-02-26", "2026-02-27", "2026-03-02", "2026-03-03", "2026-03-04", "2026-03-05", "2026-03-06", "2026-03-09", "2026-03-10", "2026-03-11", "2026-03-12", "2026-03-13", "2026-03-16", "2026-03-17", "2026-03-18", "2026-03-19", "2026-03-20", "2026-03-23", "2026-03-24", "2026-03-25", "2026-03-26", "2026-03-27", "2026-03-30", "2026-03-31", "2026-04-01", "2026-04-02", "2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-04", "2026-05-05", "2026-05-06", "2026-05-07", "2026-05-08", "2026-05-11", "2026-05-12", "2026-05-13", "2026-05-14", "2026-05-15", "2026-05-18", "2026-05-19", "2026-05-20", "2026-05-21", "2026-05-22", "2026-05-26", "2026-05-27", "2026-05-28", "2026-05-29", "2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04", "2026-06-05", "2026-06-08", "2026-06-09", "2026-06-10", "2026-06-11", "2026-06-12", "2026-06-15", "2026-06-16", "2026-06-17", "2026-06-18", "2026-06-22", "2026-06-23", "2026-06-24", "2026-06-25", "2026-06-26", "2026-06-29", "2026-06-30", "2026-07-01", "2026-07-02", "2026-07-06", "2026-07-07", "2026-07-08", "2026-07-09", "2026-07-10", "2026-07-13", "2026-07-14", "2026-07-15", "2026-07-16", "2026-07-17", "2026-07-20", "2026-07-21", "2026-07-22", "2026-07-23", "2026-07-24", "2026-07-27", "2026-07-28", "2026-07-29", "2026-07-30"], "series": [{"key": "rv21", "label": "Realized vol (21d, ann.)", "slot": 1, "values": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 11.893, 10.592, 9.548, 9.639, 9.532, 9.515, 9.228, 9.168, 8.82, 8.798, 8.894, 8.82, 8.841, 8.547, 8.486, 8.236, 7.263, 7.139, 7.405, 7.583, 7.569, 7.105, 6.395, 6.323, 5.907, 5.69, 6.019, 6.186, 6.357, 11.492, 12.716, 12.641, 12.696, 12.905, 12.927, 13.334, 13.259, 13.249, 13.329, 13.378, 13.822, 13.82, 13.801, 14.324, 14.338, 14.338, 14.959, 14.928, 15.338, 15.318, 12.585, 11.592, 11.547, 13.095, 12.868, 13.2, 12.917, 13.012, 13.941, 14.255, 15.052, 14.747, 14.951, 15.09, 14.799, 14.795, 14.821, 14.188, 14.154, 13.586, 13.599, 12.745, 12.745, 13.311, 11.901, 11.94, 12.218, 12.062, 12.323, 10.748, 10.445, 9.297, 8.911, 8.793, 8.648, 8.844, 8.828, 9.035, 9.256, 9.346, 9.243, 9.45, 9.213, 9.238, 8.585, 8.567, 8.504, 10.567, 10.952, 10.702, 10.487, 10.512, 10.546, 10.545, 10.471, 10.584, 10.337, 10.821, 10.756, 11.285, 13.285, 13.381, 13.241, 13.226, 14.278, 14.192, 14.158, 14.323, 12.3, 11.874, 12.263, 12.583, 12.788, 12.825, 12.894, 12.897, 13.206, 13.369, 13.201, 13.851, 13.563, 11.563, 11.375, 12.363, 12.426, 12.081, 12.13, 12.893, 12.635, 13.452, 13.929, 13.627, 13.45, 13.925, 14.685, 14.684, 18.499, 18.605, 18.321, 18.402, 17.903, 19.78, 19.88, 19.883, 19.308, 19.412, 19.319, 19.319, 18.684, 18.669, 17.777, 17.728, 17.75, 17.8, 16.039, 14.455, 14.214, 11.633, 11.614, 11.94, 12.013, 12.416, 10.513, 10.606, 10.478, 10.4, 10.002, 9.983, 11.351, 10.847, 11.156, 11.188, 10.806, 10.583, 10.479, 10.499, 10.23, 10.168, 9.814, 9.822, 10.162, 9.965, 13.224, 13.178, 12.889, 14.034, 15.395, 15.358, 16.19, 15.68, 16.301, 16.505, 16.181, 16.949, 16.879, 16.699, 16.695, 17.122, 17.359, 17.329, 17.316, 17.354, 17.348, 14.528, 14.74, 14.726, 13.722, 12.507, 12.465, 11.264, 11.641, 10.835, 10.611, 10.536, 10.157, 10.147, 10.145, 10.158, 10.692, 11.914]}, {"key": "vix", "label": "VIX", "slot": 5, "values": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 15.36, 17.17, 16.35, 15.3, 15.18, 15.11, 15.04, 15.35, 14.71, 14.76, 15.69, 16.36, 15.72, 15.7, 15.45, 16.1, 16.64, 16.18, 16.74, 15.29, 16.12, 16.28, 16.29, 16.63, 16.65, 16.37, 17.24, 16.3, 16.43, 21.66, 19.03, 20.81, 20.64, 25.31, 20.78, 18.23, 17.87, 18.6, 17.3, 16.37, 15.79, 16.42, 16.92, 16.91, 17.44, 17.17, 19.0, 18.01, 19.5, 19.08, 17.6, 17.28, 17.51, 20.0, 19.83, 22.38, 24.69, 23.66, 26.42, 23.43, 20.52, 18.56, 17.19, 16.35, 17.24, 16.59, 16.08, 15.78, 15.41, 16.66, 16.93, 15.77, 14.85, 15.74, 16.5, 16.48, 17.62, 16.87, 14.91, 14.08, 14.0, 13.47, 13.6, 14.2, 14.33, 14.95, 14.51, 14.9, 14.75, 15.38, 15.45, 14.49, 15.12, 15.98, 16.75, 15.84, 15.86, 20.09, 16.9, 15.64, 16.09, 16.15, 16.35, 16.35, 16.88, 17.44, 16.34, 18.0, 18.64, 21.77, 20.37, 17.36, 17.79, 17.65, 20.82, 20.6, 20.29, 19.62, 20.23, 19.09, 21.01, 19.55, 17.93, 18.63, 19.86, 21.44, 23.57, 21.15, 23.75, 29.49, 25.5, 24.93, 24.23, 27.29, 27.19, 23.51, 22.37, 25.09, 24.06, 26.78, 26.15, 26.95, 25.33, 27.44, 31.05, 30.61, 25.25, 24.54, 23.87, 24.17, 25.78, 21.04, 19.49, 19.23, 19.12, 18.36, 18.17, 17.94, 17.48, 18.87, 19.5, 18.92, 19.31, 18.71, 18.02, 17.83, 18.81, 16.89, 16.99, 18.29, 17.38, 17.39, 17.08, 17.19, 18.38, 17.99, 17.87, 17.26, 18.43, 17.82, 18.06, 17.44, 16.76, 16.7, 17.01, 16.29, 15.74, 15.32, 16.05, 15.77, 16.06, 15.4, 21.51, 18.92, 19.87, 22.22, 19.44, 17.68, 16.2, 16.41, 18.44, 16.4, 17.28, 19.49, 18.63, 18.89, 18.41, 17.65, 16.45, 16.59, 16.15, 15.57, 16.13, 16.9, 15.84, 15.03, 17.16, 16.5, 15.67, 16.73, 18.77, 18.65, 17.05, 16.64, 18.7, 18.58, 18.67, 18.21, 20.66, 17.09]}]}, {"id": "chart-hist", "type": "histogram", "edges": [-0.027486, -0.026081, -0.024676, -0.023271, -0.021866, -0.020461, -0.019056, -0.017651, -0.016246, -0.014841, -0.013436, -0.012031, -0.010626, -0.009221, -0.007816, -0.006411, -0.005006, -0.003601, -0.002196, -0.000791, 0.000614, 0.002019, 0.003425, 0.00483, 0.006235, 0.00764, 0.009045, 0.01045, 0.011855, 0.01326, 0.014665, 0.01607, 0.017475, 0.01888, 0.020285, 0.02169, 0.023095, 0.0245, 0.025905, 0.02731, 0.028715], "counts": [2, 0, 0, 0, 1, 0, 0, 4, 6, 2, 5, 4, 4, 4, 5, 14, 14, 16, 17, 23, 15, 23, 18, 18, 11, 17, 5, 8, 2, 2, 4, 3, 0, 1, 0, 0, 0, 1, 0, 1], "overlay": [0.058, 0.103, 0.176, 0.293, 0.473, 0.741, 1.126, 1.661, 2.378, 3.305, 4.457, 5.834, 7.412, 9.14, 10.94, 12.708, 14.328, 15.679, 16.652, 17.166, 17.175, 16.678, 15.72, 14.38, 12.768, 11.003, 9.203, 7.471, 5.886, 4.502, 3.341, 2.407, 1.683, 1.142, 0.752, 0.481, 0.298, 0.18, 0.105, 0.06]}, {"id": "chart-corr", "type": "heatmap", "labels": ["S\u0026P 500", "Nasdaq 100", "Dow Jones Industrial Average", "Russell 2000", "CBOE Volatility Index"], "matrix": [[1.0, 0.93, 0.836, 0.827, -0.85], [0.93, 1.0, 0.645, 0.734, -0.775], [0.836, 0.645, 1.0, 0.804, -0.751], [0.827, 0.734, 0.804, 1.0, -0.72], [-0.85, -0.775, -0.751, -0.72, 1.0]]}, {"id": "chart-yields", "type": "line", "yFormat": "yield", "endLabels": true, "dates": ["2025-07-31", "2025-08-01", "2025-08-04", "2025-08-05", "2025-08-06", "2025-08-07", "2025-08-08", "2025-08-11", "2025-08-12", "2025-08-13", "2025-08-14", "2025-08-15", "2025-08-18", "2025-08-19", "2025-08-20", "2025-08-21", "2025-08-22", "2025-08-25", "2025-08-26", "2025-08-27", "2025-08-28", "2025-08-29", "2025-09-02", "2025-09-03", "2025-09-04", "2025-09-05", "2025-09-08", "2025-09-09", "2025-09-10", "2025-09-11", "2025-09-12", "2025-09-15", "2025-09-16", "2025-09-17", "2025-09-18", "2025-09-19", "2025-09-22", "2025-09-23", "2025-09-24", "2025-09-25", "2025-09-26", "2025-09-29", "2025-09-30", "2025-10-01", "2025-10-02", "2025-10-03", "2025-10-06", "2025-10-07", "2025-10-08", "2025-10-09", "2025-10-10", "2025-10-14", "2025-10-15", "2025-10-16", "2025-10-17", "2025-10-20", "2025-10-21", "2025-10-22", "2025-10-23", "2025-10-24", "2025-10-27", "2025-10-28", "2025-10-29", "2025-10-30", "2025-10-31", "2025-11-03", "2025-11-04", "2025-11-05", "2025-11-06", "2025-11-07", "2025-11-10", "2025-11-12", "2025-11-13", "2025-11-14", "2025-11-17", "2025-11-18", "2025-11-19", "2025-11-20", "2025-11-21", "2025-11-24", "2025-11-25", "2025-11-26", "2025-11-28", "2025-12-01", "2025-12-02", "2025-12-03", "2025-12-04", "2025-12-05", "2025-12-08", "2025-12-09", "2025-12-10", "2025-12-11", "2025-12-12", "2025-12-15", "2025-12-16", "2025-12-17", "2025-12-18", "2025-12-19", "2025-12-22", "2025-12-23", "2025-12-24", "2025-12-26", "2025-12-29", "2025-12-30", "2025-12-31", "2026-01-02", "2026-01-05", "2026-01-06", "2026-01-07", "2026-01-08", "2026-01-09", "2026-01-12", "2026-01-13", "2026-01-14", "2026-01-15", "2026-01-16", "2026-01-20", "2026-01-21", "2026-01-22", "2026-01-23", "2026-01-26", "2026-01-27", "2026-01-28", "2026-01-29", "2026-01-30", "2026-02-02", "2026-02-03", "2026-02-04", "2026-02-05", "2026-02-06", "2026-02-09", "2026-02-10", "2026-02-11", "2026-02-12", "2026-02-13", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20", "2026-02-23", "2026-02-24", "2026-02-25", "2026-02-26", "2026-02-27", "2026-03-02", "2026-03-03", "2026-03-04", "2026-03-05", "2026-03-06", "2026-03-09", "2026-03-10", "2026-03-11", "2026-03-12", "2026-03-13", "2026-03-16", "2026-03-17", "2026-03-18", "2026-03-19", "2026-03-20", "2026-03-23", "2026-03-24", "2026-03-25", "2026-03-26", "2026-03-27", "2026-03-30", "2026-03-31", "2026-04-01", "2026-04-02", "2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-04", "2026-05-05", "2026-05-06", "2026-05-07", "2026-05-08", "2026-05-11", "2026-05-12", "2026-05-13", "2026-05-14", "2026-05-15", "2026-05-18", "2026-05-19", "2026-05-20", "2026-05-21", "2026-05-22", "2026-05-26", "2026-05-27", "2026-05-28", "2026-05-29", "2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04", "2026-06-05", "2026-06-08", "2026-06-09", "2026-06-10", "2026-06-11", "2026-06-12", "2026-06-15", "2026-06-16", "2026-06-17", "2026-06-18", "2026-06-22", "2026-06-23", "2026-06-24", "2026-06-25", "2026-06-26", "2026-06-29", "2026-06-30", "2026-07-01", "2026-07-02", "2026-07-06", "2026-07-07", "2026-07-08", "2026-07-09", "2026-07-10", "2026-07-13", "2026-07-14", "2026-07-15", "2026-07-16", "2026-07-17", "2026-07-20", "2026-07-21", "2026-07-22", "2026-07-23", "2026-07-24", "2026-07-27", "2026-07-28", "2026-07-29"], "series": [{"key": "DGS5", "label": "5-year Treasury", "slot": 6, "values": [3.96, 3.77, 3.75, 3.77, 3.77, 3.79, 3.84, 3.83, 3.83, 3.77, 3.82, 3.85, 3.86, 3.82, 3.81, 3.86, 3.76, 3.8, 3.75, 3.69, 3.69, 3.68, 3.74, 3.69, 3.65, 3.59, 3.57, 3.61, 3.59, 3.59, 3.63, 3.61, 3.59, 3.62, 3.67, 3.68, 3.71, 3.68, 3.7, 3.75, 3.76, 3.74, 3.74, 3.68, 3.67, 3.72, 3.75, 3.71, 3.72, 3.74, 3.65, 3.6, 3.63, 3.55, 3.59, 3.58, 3.56, 3.56, 3.61, 3.61, 3.61, 3.6, 3.7, 3.72, 3.71, 3.72, 3.69, 3.76, 3.69, 3.67, 3.72, 3.68, 3.71, 3.74, 3.72, 3.7, 3.71, 3.68, 3.62, 3.61, 3.55, 3.56, 3.59, 3.67, 3.66, 3.62, 3.68, 3.72, 3.75, 3.78, 3.72, 3.72, 3.75, 3.73, 3.69, 3.7, 3.66, 3.7, 3.71, 3.72, 3.7, 3.68, 3.67, 3.68, 3.73, 3.74, 3.71, 3.72, 3.7, 3.74, 3.75, 3.77, 3.75, 3.72, 3.77, 3.82, 3.86, 3.83, 3.85, 3.84, 3.82, 3.81, 3.83, 3.8, 3.79, 3.83, 3.83, 3.83, 3.74, 3.76, 3.75, 3.7, 3.75, 3.67, 3.61, 3.63, 3.66, 3.65, 3.65, 3.59, 3.61, 3.61, 3.57, 3.51, 3.62, 3.63, 3.67, 3.72, 3.72, 3.71, 3.73, 3.79, 3.88, 3.87, 3.8, 3.79, 3.87, 3.88, 4.01, 3.95, 4.03, 3.96, 4.08, 4.06, 3.97, 3.92, 3.97, 3.94, 3.98, 3.95, 3.92, 3.91, 3.94, 3.92, 3.87, 3.9, 3.91, 3.84, 3.86, 3.91, 3.91, 3.96, 3.92, 3.94, 3.97, 4.05, 4.02, 4.02, 4.08, 4.08, 3.99, 4.04, 4.02, 4.07, 4.12, 4.12, 4.13, 4.26, 4.27, 4.32, 4.22, 4.25, 4.27, 4.19, 4.17, 4.15, 4.13, 4.18, 4.17, 4.21, 4.18, 4.29, 4.29, 4.26, 4.27, 4.18, 4.21, 4.18, 4.16, 4.27, 4.23, 4.29, 4.27, 4.17, 4.15, 4.12, 4.14, 4.19, 4.24, 4.23, 4.21, 4.27, 4.31, 4.27, 4.3, 4.37, 4.31, 4.26, 4.28, 4.28, 4.33, 4.37, 4.41, 4.46, 4.43, 4.4, 4.35, 4.37]}, {"key": "DGS10", "label": "10-year Treasury", "slot": 7, "values": [4.37, 4.23, 4.22, 4.22, 4.22, 4.23, 4.27, 4.27, 4.29, 4.24, 4.29, 4.33, 4.34, 4.3, 4.29, 4.33, 4.26, 4.28, 4.26, 4.24, 4.22, 4.23, 4.28, 4.22, 4.17, 4.1, 4.05, 4.08, 4.04, 4.01, 4.06, 4.05, 4.04, 4.06, 4.11, 4.14, 4.15, 4.12, 4.16, 4.18, 4.2, 4.15, 4.16, 4.12, 4.1, 4.13, 4.18, 4.14, 4.13, 4.14, 4.05, 4.03, 4.05, 3.99, 4.02, 4.0, 3.98, 3.97, 4.01, 4.02, 4.01, 3.99, 4.08, 4.11, 4.11, 4.13, 4.1, 4.17, 4.11, 4.11, 4.13, 4.08, 4.11, 4.14, 4.13, 4.12, 4.13, 4.1, 4.06, 4.04, 4.01, 4.0, 4.02, 4.09, 4.09, 4.06, 4.11, 4.14, 4.17, 4.18, 4.13, 4.14, 4.19, 4.18, 4.15, 4.16, 4.12, 4.16, 4.17, 4.18, 4.15, 4.14, 4.12, 4.14, 4.18, 4.19, 4.17, 4.18, 4.15, 4.19, 4.18, 4.19, 4.18, 4.15, 4.17, 4.24, 4.3, 4.26, 4.26, 4.24, 4.22, 4.24, 4.26, 4.24, 4.26, 4.29, 4.28, 4.29, 4.21, 4.22, 4.22, 4.16, 4.18, 4.09, 4.04, 4.05, 4.09, 4.08, 4.08, 4.03, 4.04, 4.05, 4.02, 3.97, 4.05, 4.06, 4.09, 4.13, 4.15, 4.12, 4.15, 4.21, 4.27, 4.28, 4.23, 4.2, 4.26, 4.25, 4.39, 4.34, 4.39, 4.33, 4.42, 4.44, 4.35, 4.3, 4.33, 4.31, 4.34, 4.33, 4.29, 4.29, 4.31, 4.3, 4.26, 4.29, 4.32, 4.26, 4.26, 4.3, 4.3, 4.34, 4.31, 4.35, 4.36, 4.42, 4.4, 4.39, 4.45, 4.43, 4.36, 4.41, 4.38, 4.42, 4.46, 4.46, 4.47, 4.59, 4.61, 4.67, 4.57, 4.57, 4.56, 4.5, 4.48, 4.45, 4.45, 4.47, 4.46, 4.49, 4.47, 4.55, 4.56, 4.53, 4.55, 4.45, 4.48, 4.47, 4.43, 4.49, 4.46, 4.51, 4.5, 4.41, 4.4, 4.38, 4.38, 4.44, 4.48, 4.49, 4.48, 4.55, 4.56, 4.54, 4.56, 4.62, 4.58, 4.55, 4.57, 4.55, 4.6, 4.63, 4.67, 4.71, 4.69, 4.65, 4.61, 4.67]}, {"key": "DGS30", "label": "30-year Treasury", "slot": 8, "values": [4.89, 4.81, 4.8, 4.78, 4.81, 4.81, 4.85, 4.84, 4.88, 4.83, 4.88, 4.92, 4.94, 4.9, 4.89, 4.92, 4.88, 4.89, 4.9, 4.91, 4.88, 4.92, 4.97, 4.9, 4.86, 4.78, 4.69, 4.72, 4.69, 4.65, 4.68, 4.66, 4.65, 4.66, 4.72, 4.75, 4.77, 4.73, 4.76, 4.75, 4.77, 4.71, 4.73, 4.72, 4.69, 4.71, 4.76, 4.73, 4.72, 4.72, 4.63, 4.62, 4.64, 4.58, 4.6, 4.58, 4.55, 4.54, 4.58, 4.59, 4.57, 4.55, 4.61, 4.65, 4.67, 4.69, 4.67, 4.74, 4.69, 4.7, 4.71, 4.67, 4.7, 4.74, 4.73, 4.74, 4.75, 4.73, 4.71, 4.68, 4.67, 4.64, 4.67, 4.74, 4.74, 4.73, 4.76, 4.79, 4.81, 4.8, 4.78, 4.79, 4.85, 4.84, 4.82, 4.83, 4.8, 4.82, 4.84, 4.83, 4.79, 4.81, 4.8, 4.81, 4.84, 4.86, 4.85, 4.86, 4.82, 4.85, 4.82, 4.83, 4.83, 4.79, 4.79, 4.83, 4.91, 4.87, 4.84, 4.82, 4.8, 4.83, 4.85, 4.85, 4.87, 4.9, 4.9, 4.91, 4.85, 4.85, 4.85, 4.78, 4.82, 4.72, 4.69, 4.68, 4.71, 4.7, 4.72, 4.7, 4.7, 4.7, 4.67, 4.64, 4.7, 4.7, 4.72, 4.74, 4.77, 4.72, 4.78, 4.86, 4.88, 4.9, 4.86, 4.85, 4.88, 4.83, 4.96, 4.91, 4.94, 4.89, 4.93, 4.98, 4.91, 4.88, 4.91, 4.88, 4.89, 4.9, 4.89, 4.9, 4.91, 4.9, 4.87, 4.89, 4.93, 4.88, 4.88, 4.89, 4.9, 4.92, 4.91, 4.94, 4.94, 4.98, 4.98, 4.97, 5.02, 4.98, 4.94, 4.97, 4.95, 4.98, 5.03, 5.03, 5.02, 5.12, 5.14, 5.18, 5.11, 5.1, 5.07, 5.03, 5.01, 4.98, 4.99, 4.99, 4.97, 4.99, 4.97, 5.01, 5.03, 5.01, 5.03, 4.95, 4.97, 4.97, 4.93, 4.93, 4.9, 4.95, 4.94, 4.86, 4.86, 4.87, 4.86, 4.91, 4.97, 4.98, 4.99, 5.05, 5.06, 5.05, 5.06, 5.1, 5.08, 5.08, 5.09, 5.06, 5.11, 5.13, 5.15, 5.17, 5.16, 5.12, 5.09, 5.2]}]}, {"id": "chart-curve", "type": "line", "yFormat": "bp", "endLabels": true, "zeroLine": true, "dates": ["2025-07-31", "2025-08-01", "2025-08-04", "2025-08-05", "2025-08-06", "2025-08-07", "2025-08-08", "2025-08-11", "2025-08-12", "2025-08-13", "2025-08-14", "2025-08-15", "2025-08-18", "2025-08-19", "2025-08-20", "2025-08-21", "2025-08-22", "2025-08-25", "2025-08-26", "2025-08-27", "2025-08-28", "2025-08-29", "2025-09-02", "2025-09-03", "2025-09-04", "2025-09-05", "2025-09-08", "2025-09-09", "2025-09-10", "2025-09-11", "2025-09-12", "2025-09-15", "2025-09-16", "2025-09-17", "2025-09-18", "2025-09-19", "2025-09-22", "2025-09-23", "2025-09-24", "2025-09-25", "2025-09-26", "2025-09-29", "2025-09-30", "2025-10-01", "2025-10-02", "2025-10-03", "2025-10-06", "2025-10-07", "2025-10-08", "2025-10-09", "2025-10-10", "2025-10-14", "2025-10-15", "2025-10-16", "2025-10-17", "2025-10-20", "2025-10-21", "2025-10-22", "2025-10-23", "2025-10-24", "2025-10-27", "2025-10-28", "2025-10-29", "2025-10-30", "2025-10-31", "2025-11-03", "2025-11-04", "2025-11-05", "2025-11-06", "2025-11-07", "2025-11-10", "2025-11-12", "2025-11-13", "2025-11-14", "2025-11-17", "2025-11-18", "2025-11-19", "2025-11-20", "2025-11-21", "2025-11-24", "2025-11-25", "2025-11-26", "2025-11-28", "2025-12-01", "2025-12-02", "2025-12-03", "2025-12-04", "2025-12-05", "2025-12-08", "2025-12-09", "2025-12-10", "2025-12-11", "2025-12-12", "2025-12-15", "2025-12-16", "2025-12-17", "2025-12-18", "2025-12-19", "2025-12-22", "2025-12-23", "2025-12-24", "2025-12-26", "2025-12-29", "2025-12-30", "2025-12-31", "2026-01-02", "2026-01-05", "2026-01-06", "2026-01-07", "2026-01-08", "2026-01-09", "2026-01-12", "2026-01-13", "2026-01-14", "2026-01-15", "2026-01-16", "2026-01-20", "2026-01-21", "2026-01-22", "2026-01-23", "2026-01-26", "2026-01-27", "2026-01-28", "2026-01-29", "2026-01-30", "2026-02-02", "2026-02-03", "2026-02-04", "2026-02-05", "2026-02-06", "2026-02-09", "2026-02-10", "2026-02-11", "2026-02-12", "2026-02-13", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20", "2026-02-23", "2026-02-24", "2026-02-25", "2026-02-26", "2026-02-27", "2026-03-02", "2026-03-03", "2026-03-04", "2026-03-05", "2026-03-06", "2026-03-09", "2026-03-10", "2026-03-11", "2026-03-12", "2026-03-13", "2026-03-16", "2026-03-17", "2026-03-18", "2026-03-19", "2026-03-20", "2026-03-23", "2026-03-24", "2026-03-25", "2026-03-26", "2026-03-27", "2026-03-30", "2026-03-31", "2026-04-01", "2026-04-02", "2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-04", "2026-05-05", "2026-05-06", "2026-05-07", "2026-05-08", "2026-05-11", "2026-05-12", "2026-05-13", "2026-05-14", "2026-05-15", "2026-05-18", "2026-05-19", "2026-05-20", "2026-05-21", "2026-05-22", "2026-05-26", "2026-05-27", "2026-05-28", "2026-05-29", "2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04", "2026-06-05", "2026-06-08", "2026-06-09", "2026-06-10", "2026-06-11", "2026-06-12", "2026-06-15", "2026-06-16", "2026-06-17", "2026-06-18", "2026-06-22", "2026-06-23", "2026-06-24", "2026-06-25", "2026-06-26", "2026-06-29", "2026-06-30", "2026-07-01", "2026-07-02", "2026-07-06", "2026-07-07", "2026-07-08", "2026-07-09", "2026-07-10", "2026-07-13", "2026-07-14", "2026-07-15", "2026-07-16", "2026-07-17", "2026-07-20", "2026-07-21", "2026-07-22", "2026-07-23", "2026-07-24", "2026-07-27", "2026-07-28", "2026-07-29"], "series": [{"key": "s10_5", "label": "10y \u2212 5y", "slot": 7, "values": [41.0, 46.0, 47.0, 45.0, 45.0, 44.0, 43.0, 44.0, 46.0, 47.0, 47.0, 48.0, 48.0, 48.0, 48.0, 47.0, 50.0, 48.0, 51.0, 55.0, 53.0, 55.0, 54.0, 53.0, 52.0, 51.0, 48.0, 47.0, 45.0, 42.0, 43.0, 44.0, 45.0, 44.0, 44.0, 46.0, 44.0, 44.0, 46.0, 43.0, 44.0, 41.0, 42.0, 44.0, 43.0, 41.0, 43.0, 43.0, 41.0, 40.0, 40.0, 43.0, 42.0, 44.0, 43.0, 42.0, 42.0, 41.0, 40.0, 41.0, 40.0, 39.0, 38.0, 39.0, 40.0, 41.0, 41.0, 41.0, 42.0, 44.0, 41.0, 40.0, 40.0, 40.0, 41.0, 42.0, 42.0, 42.0, 44.0, 43.0, 46.0, 44.0, 43.0, 42.0, 43.0, 44.0, 43.0, 42.0, 42.0, 40.0, 41.0, 42.0, 44.0, 45.0, 46.0, 46.0, 46.0, 46.0, 46.0, 46.0, 45.0, 46.0, 45.0, 46.0, 45.0, 45.0, 46.0, 46.0, 45.0, 45.0, 43.0, 42.0, 43.0, 43.0, 40.0, 42.0, 44.0, 43.0, 41.0, 40.0, 40.0, 43.0, 43.0, 44.0, 47.0, 46.0, 45.0, 46.0, 47.0, 46.0, 47.0, 46.0, 43.0, 42.0, 43.0, 42.0, 43.0, 43.0, 43.0, 44.0, 43.0, 44.0, 45.0, 46.0, 43.0, 43.0, 42.0, 41.0, 43.0, 41.0, 42.0, 42.0, 39.0, 41.0, 43.0, 41.0, 39.0, 37.0, 38.0, 39.0, 36.0, 37.0, 34.0, 38.0, 38.0, 38.0, 36.0, 37.0, 36.0, 38.0, 37.0, 38.0, 37.0, 38.0, 39.0, 39.0, 41.0, 42.0, 40.0, 39.0, 39.0, 38.0, 39.0, 41.0, 39.0, 37.0, 38.0, 37.0, 37.0, 35.0, 37.0, 37.0, 36.0, 35.0, 34.0, 34.0, 34.0, 33.0, 34.0, 35.0, 35.0, 32.0, 29.0, 31.0, 31.0, 30.0, 32.0, 29.0, 29.0, 28.0, 29.0, 26.0, 27.0, 27.0, 28.0, 27.0, 27.0, 29.0, 27.0, 22.0, 23.0, 22.0, 23.0, 24.0, 25.0, 26.0, 24.0, 25.0, 24.0, 26.0, 27.0, 28.0, 25.0, 27.0, 26.0, 25.0, 27.0, 29.0, 29.0, 27.0, 27.0, 26.0, 26.0, 25.0, 26.0, 25.0, 26.0, 30.0]}, {"key": "s30_10", "label": "30y \u2212 10y", "slot": 8, "values": [52.0, 58.0, 58.0, 56.0, 59.0, 58.0, 58.0, 57.0, 59.0, 59.0, 59.0, 59.0, 60.0, 60.0, 60.0, 59.0, 62.0, 61.0, 64.0, 67.0, 66.0, 69.0, 69.0, 68.0, 69.0, 68.0, 64.0, 64.0, 65.0, 64.0, 62.0, 61.0, 61.0, 60.0, 61.0, 61.0, 62.0, 61.0, 60.0, 57.0, 57.0, 56.0, 57.0, 60.0, 59.0, 58.0, 58.0, 59.0, 59.0, 58.0, 58.0, 59.0, 59.0, 59.0, 58.0, 58.0, 57.0, 57.0, 57.0, 57.0, 56.0, 56.0, 53.0, 54.0, 56.0, 56.0, 57.0, 57.0, 58.0, 59.0, 58.0, 59.0, 59.0, 60.0, 60.0, 62.0, 62.0, 63.0, 65.0, 64.0, 66.0, 64.0, 65.0, 65.0, 65.0, 67.0, 65.0, 65.0, 64.0, 62.0, 65.0, 65.0, 66.0, 66.0, 67.0, 67.0, 68.0, 66.0, 67.0, 65.0, 64.0, 67.0, 68.0, 67.0, 66.0, 67.0, 68.0, 68.0, 67.0, 66.0, 64.0, 64.0, 65.0, 64.0, 62.0, 59.0, 61.0, 61.0, 58.0, 58.0, 58.0, 59.0, 59.0, 61.0, 61.0, 61.0, 62.0, 62.0, 64.0, 63.0, 63.0, 62.0, 64.0, 63.0, 65.0, 63.0, 62.0, 62.0, 64.0, 67.0, 66.0, 65.0, 65.0, 67.0, 65.0, 64.0, 63.0, 61.0, 62.0, 60.0, 63.0, 65.0, 61.0, 62.0, 63.0, 65.0, 62.0, 58.0, 57.0, 57.0, 55.0, 56.0, 51.0, 54.0, 56.0, 58.0, 58.0, 57.0, 55.0, 57.0, 60.0, 61.0, 60.0, 60.0, 61.0, 60.0, 61.0, 62.0, 62.0, 59.0, 60.0, 58.0, 60.0, 59.0, 58.0, 56.0, 58.0, 58.0, 57.0, 55.0, 58.0, 56.0, 57.0, 56.0, 57.0, 57.0, 55.0, 53.0, 53.0, 51.0, 54.0, 53.0, 51.0, 53.0, 53.0, 53.0, 54.0, 52.0, 51.0, 50.0, 50.0, 46.0, 47.0, 48.0, 48.0, 50.0, 49.0, 50.0, 50.0, 44.0, 44.0, 44.0, 44.0, 45.0, 46.0, 49.0, 48.0, 47.0, 49.0, 49.0, 51.0, 50.0, 50.0, 51.0, 50.0, 48.0, 50.0, 53.0, 52.0, 51.0, 51.0, 50.0, 48.0, 46.0, 47.0, 47.0, 48.0, 53.0]}]}, {"id": "chart-dy-hist", "type": "histogram", "edges": [-14.0, -13.066667, -12.133333, -11.2, -10.266667, -9.333333, -8.4, -7.466667, -6.533333, -5.6, -4.666667, -3.733333, -2.8, -1.866667, -0.933333, 0.0, 0.933333, 1.866667, 2.8, 3.733333, 4.666667, 5.6, 6.533333, 7.466667, 8.4, 9.333333, 10.266667, 11.2, 12.133333, 13.066667, 14.0], "counts": [1, 0, 0, 0, 2, 4, 1, 3, 7, 11, 13, 19, 22, 26, 0, 16, 28, 23, 19, 18, 11, 11, 4, 2, 2, 0, 0, 1, 0, 1], "overlay": [0.077, 0.162, 0.325, 0.618, 1.114, 1.906, 3.094, 4.763, 6.954, 9.632, 12.653, 15.766, 18.634, 20.889, 22.212, 22.403, 21.432, 19.448, 16.739, 13.665, 10.582, 7.772, 5.415, 3.578, 2.243, 1.333, 0.752, 0.402, 0.204, 0.098], "xLabel": "daily 10-year yield change, basis points"}, {"id": "chart-rate-corr", "type": "line", "yFormat": "corr", "endLabels": false, "zeroLine": true, "dates": ["2025-08-01", "2025-08-04", "2025-08-05", "2025-08-06", "2025-08-07", "2025-08-08", "2025-08-11", "2025-08-12", "2025-08-13", "2025-08-14", "2025-08-15", "2025-08-18", "2025-08-19", "2025-08-20", "2025-08-21", "2025-08-22", "2025-08-25", "2025-08-26", "2025-08-27", "2025-08-28", "2025-08-29", "2025-09-02", "2025-09-03", "2025-09-04", "2025-09-05", "2025-09-08", "2025-09-09", "2025-09-10", "2025-09-11", "2025-09-12", "2025-09-15", "2025-09-16", "2025-09-17", "2025-09-18", "2025-09-19", "2025-09-22", "2025-09-23", "2025-09-24", "2025-09-25", "2025-09-26", "2025-09-29", "2025-09-30", "2025-10-01", "2025-10-02", "2025-10-03", "2025-10-06", "2025-10-07", "2025-10-08", "2025-10-09", "2025-10-10", "2025-10-15", "2025-10-16", "2025-10-17", "2025-10-20", "2025-10-21", "2025-10-22", "2025-10-23", "2025-10-24", "2025-10-27", "2025-10-28", "2025-10-29", "2025-10-30", "2025-10-31", "2025-11-03", "2025-11-04", "2025-11-05", "2025-11-06", "2025-11-07", "2025-11-10", "2025-11-13", "2025-11-14", "2025-11-17", "2025-11-18", "2025-11-19", "2025-11-20", "2025-11-21", "2025-11-24", "2025-11-25", "2025-11-26", "2025-11-28", "2025-12-01", "2025-12-02", "2025-12-03", "2025-12-04", "2025-12-05", "2025-12-08", "2025-12-09", "2025-12-10", "2025-12-11", "2025-12-12", "2025-12-15", "2025-12-16", "2025-12-17", "2025-12-18", "2025-12-19", "2025-12-22", "2025-12-23", "2025-12-24", "2025-12-26", "2025-12-29", "2025-12-30", "2025-12-31", "2026-01-02", "2026-01-05", "2026-01-06", "2026-01-07", "2026-01-08", "2026-01-09", "2026-01-12", "2026-01-13", "2026-01-14", "2026-01-15", "2026-01-16", "2026-01-20", "2026-01-21", "2026-01-22", "2026-01-23", "2026-01-26", "2026-01-27", "2026-01-28", "2026-01-29", "2026-01-30", "2026-02-02", "2026-02-03", "2026-02-04", "2026-02-05", "2026-02-06", "2026-02-09", "2026-02-10", "2026-02-11", "2026-02-12", "2026-02-13", "2026-02-17", "2026-02-18", "2026-02-19", "2026-02-20", "2026-02-23", "2026-02-24", "2026-02-25", "2026-02-26", "2026-02-27", "2026-03-02", "2026-03-03", "2026-03-04", "2026-03-05", "2026-03-06", "2026-03-09", "2026-03-10", "2026-03-11", "2026-03-12", "2026-03-13", "2026-03-16", "2026-03-17", "2026-03-18", "2026-03-19", "2026-03-20", "2026-03-23", "2026-03-24", "2026-03-25", "2026-03-26", "2026-03-27", "2026-03-30", "2026-03-31", "2026-04-01", "2026-04-02", "2026-04-06", "2026-04-07", "2026-04-08", "2026-04-09", "2026-04-10", "2026-04-13", "2026-04-14", "2026-04-15", "2026-04-16", "2026-04-17", "2026-04-20", "2026-04-21", "2026-04-22", "2026-04-23", "2026-04-24", "2026-04-27", "2026-04-28", "2026-04-29", "2026-04-30", "2026-05-01", "2026-05-04", "2026-05-05", "2026-05-06", "2026-05-07", "2026-05-08", "2026-05-11", "2026-05-12", "2026-05-13", "2026-05-14", "2026-05-15", "2026-05-18", "2026-05-19", "2026-05-20", "2026-05-21", "2026-05-22", "2026-05-26", "2026-05-27", "2026-05-28", "2026-05-29", "2026-06-01", "2026-06-02", "2026-06-03", "2026-06-04", "2026-06-05", "2026-06-08", "2026-06-09", "2026-06-10", "2026-06-11", "2026-06-12", "2026-06-15", "2026-06-16", "2026-06-17", "2026-06-18", "2026-06-22", "2026-06-23", "2026-06-24", "2026-06-25", "2026-06-26", "2026-06-29", "2026-06-30", "2026-07-01", "2026-07-02", "2026-07-06", "2026-07-07", "2026-07-08", "2026-07-09", "2026-07-10", "2026-07-13", "2026-07-14", "2026-07-15", "2026-07-16", "2026-07-17", "2026-07-20", "2026-07-21", "2026-07-22", "2026-07-23", "2026-07-24", "2026-07-27", "2026-07-28", "2026-07-29"], "series": [{"key": "roll", "label": "63d corr (S\u0026P 500 vs 10y change)", "slot": 1, "values": [null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, null, 0.189, 0.062, 0.094, 0.105, 0.145, 0.147, 0.145, 0.105, 0.092, 0.105, 0.109, 0.121, 0.141, 0.106, 0.088, 0.086, 0.144, 0.157, 0.131, 0.134, 0.132, 0.137, 0.164, 0.174, 0.2, 0.167, 0.175, 0.136, 0.145, 0.168, 0.164, 0.145, 0.16, 0.164, 0.156, 0.143, 0.142, 0.136, 0.143, 0.13, 0.125, 0.126, 0.127, 0.142, 0.141, 0.137, 0.13, 0.123, 0.137, 0.141, -0.025, -0.103, -0.164, -0.174, -0.16, -0.168, -0.17, -0.185, -0.186, -0.182, -0.169, -0.167, -0.153, -0.073, -0.062, -0.09, -0.09, -0.144, -0.038, -0.06, -0.028, -0.012, -0.016, -0.021, 0.012, -0.013, 0.016, 0.049, 0.083, 0.086, 0.073, 0.115, 0.098, 0.086, 0.064, 0.056, 0.059, 0.002, 0.023, -0.013, 0.013, -0.035, -0.037, -0.136, -0.148, -0.174, -0.194, -0.252, -0.251, -0.23, -0.273, -0.262, -0.255, -0.249, -0.245, -0.273, -0.277, -0.28, -0.28, -0.293, -0.284, -0.289, -0.309, -0.312, -0.287, -0.273, -0.278, -0.285, -0.28, -0.284, -0.282, -0.289, -0.288, -0.3, -0.311, -0.334, -0.395, -0.417, -0.414, -0.433, -0.433, -0.525, -0.558, -0.559, -0.573, -0.586, -0.586, -0.627, -0.63, -0.631, -0.647, -0.67, -0.678, -0.684, -0.695, -0.693, -0.711, -0.708, -0.697, -0.691, -0.699, -0.695, -0.685, -0.667, -0.667, -0.674, -0.655, -0.626, -0.594, -0.594, -0.563, -0.562, -0.585, -0.577, -0.587, -0.59, -0.6, -0.601, -0.6, -0.598, -0.607, -0.606, -0.598, -0.612, -0.593, -0.579, -0.566, -0.561, -0.571, -0.566, -0.555, -0.557, -0.573]}]}, {"id": "chart-rate-corr-heat", "type": "heatmap", "rowLabels": ["S\u0026P 500", "Nasdaq 100", "Dow Jones Industrial Average", "Russell 2000", "CBOE Volatility Index"], "colLabels": ["5-year Treasury", "10-year Treasury", "30-year Treasury"], "matrix": [[-0.218, -0.245, -0.199], [-0.164, -0.199, -0.171], [-0.258, -0.288, -0.255], [-0.254, -0.28, -0.229], [0.129, 0.144, 0.118]]}]}</script>
+<script>
+(function(){
+  var DATA = JSON.parse(document.getElementById('chart-data').textContent);
+  var NS = 'http://www.w3.org/2000/svg';
+
+  function el(tag, attrs){
+    var e = document.createElementNS(NS, tag);
+    for (var k in attrs) e.setAttribute(k, attrs[k]);
+    return e;
+  }
+
+  function fmtVal(v, fmt){
+    if (v === null || v === undefined || (typeof v === 'number' && isNaN(v))) return 'n/a';
+    if (fmt === 'pct') return (v >= 0 ? '+' : '') + v.toFixed(2) + '%';
+    if (fmt === 'index') return v.toFixed(1);
+    if (fmt === 'price') return v.toLocaleString(undefined, {maximumFractionDigits: 0});
+    if (fmt === 'yield') return v.toFixed(2) + '%';          // a level: no forced sign
+    if (fmt === 'bp') return (v >= 0 ? '+' : '') + v.toFixed(0) + ' bp';
+    if (fmt === 'corr') return v.toFixed(2);
+    return String(v);
+  }
+
+  function buildScale(values, height, padTop, padBottom){
+    var finite = values.filter(function(v){ return v !== null && v !== undefined && !isNaN(v); });
+    var lo = Math.min.apply(null, finite), hi = Math.max.apply(null, finite);
+    if (lo === hi) { lo -= 1; hi += 1; }
+    var pad = (hi - lo) * 0.08;
+    lo -= pad; hi += pad;
+    return {
+      lo: lo, hi: hi,
+      y: function(v){ return height - padBottom - ((v - lo) / (hi - lo)) * (height - padTop - padBottom); }
+    };
+  }
+
+  function addTooltip(container){
+    var tip = document.createElement('div');
+    tip.className = 'viz-tooltip';
+    tip.style.display = 'none';
+    container.style.position = 'relative';
+    container.appendChild(tip);
+    return tip;
+  }
+
+  function positionTooltip(tip, container, ev){
+    var rect = container.getBoundingClientRect();
+    var left = ev.clientX - rect.left + 14;
+    if (left > rect.width - 180) left = ev.clientX - rect.left - 190;
+    tip.style.left = left + 'px';
+    tip.style.top = Math.max(0, ev.clientY - rect.top - 44) + 'px';
+  }
+
+  function lineChart(container, spec){
+    var width = 900, height = 340;
+    var padL = 54, padR = spec.series.length > 1 ? 20 : 24, padT = 20, padB = 30;
+    var svg = el('svg', {viewBox: '0 0 ' + width + ' ' + height, class: 'viz-svg'});
+    var n = spec.dates.length;
+    function x(i){ return padL + (i / (n - 1)) * (width - padL - padR); }
+    var allVals = [];
+    spec.series.forEach(function(s){ allVals = allVals.concat(s.values); });
+    var scale = buildScale(allVals, height, padT, padB);
+    var y = scale.y, lo = scale.lo, hi = scale.hi;
+
+    var ticks = 4;
+    for (var t = 0; t <= ticks; t++){
+      var v = lo + (hi - lo) * t / ticks;
+      var gy = y(v);
+      svg.appendChild(el('line', {x1: padL, x2: width - padR, y1: gy, y2: gy, class: 'viz-grid'}));
+      var lbl = el('text', {x: padL - 8, y: gy + 4, class: 'viz-axis-label', 'text-anchor': 'end'});
+      lbl.textContent = fmtVal(v, spec.yFormat);
+      svg.appendChild(lbl);
+    }
+    if ((spec.yFormat === 'pct' || spec.zeroLine) && lo < 0 && hi > 0){
+      svg.appendChild(el('line', {x1: padL, x2: width - padR, y1: y(0), y2: y(0), class: 'viz-baseline'}));
+    }
+    [0, Math.floor((n - 1) / 2), n - 1].forEach(function(i){
+      var anchor = i === 0 ? 'start' : (i === n - 1 ? 'end' : 'middle');
+      var tx = el('text', {x: x(i), y: height - 8, class: 'viz-axis-label', 'text-anchor': anchor});
+      tx.textContent = spec.dates[i];
+      svg.appendChild(tx);
+    });
+
+    spec.series.forEach(function(s){
+      var d = '', started = false, firstI = -1, lastI = -1;
+      s.values.forEach(function(v, i){
+        if (v === null || v === undefined || isNaN(v)){ started = false; return; }
+        if (firstI === -1) firstI = i;
+        lastI = i;
+        d += (started ? 'L' : 'M') + x(i).toFixed(2) + ',' + y(v).toFixed(2) + ' ';
+        started = true;
+      });
+      if (spec.area && firstI !== -1){
+        var baseline = y(Math.min(Math.max(lo, 0), hi));
+        var areaD = 'M' + x(firstI).toFixed(2) + ',' + baseline.toFixed(2) + ' ' +
+          d.replace(/^M/, 'L') + 'L' + x(lastI).toFixed(2) + ',' + baseline.toFixed(2) + ' Z';
+        svg.appendChild(el('path', {d: areaD, class: 'viz-area', style: 'fill: var(--series-' + s.slot + ')'}));
+      }
+      svg.appendChild(el('path', {d: d, class: 'viz-line', style: 'stroke: var(--series-' + s.slot + ')'}));
+      if (spec.endLabels && lastI !== -1){
+        var lx = x(lastI), ly = y(s.values[lastI]);
+        svg.appendChild(el('circle', {cx: lx, cy: ly, r: 3, style: 'fill: var(--series-' + s.slot + ')'}));
+        var elbl = el('text', {x: Math.min(lx + 6, width - 4), y: ly + 4, class: 'viz-end-label',
+          'text-anchor': lx + 6 > width - 90 ? 'end' : 'start', style: 'fill: var(--series-' + s.slot + ')'});
+        elbl.textContent = s.label + ' ' + fmtVal(s.values[lastI], spec.yFormat);
+        svg.appendChild(elbl);
+      }
+    });
+
+    var cross = el('line', {x1: padL, x2: padL, y1: padT, y2: height - padB, class: 'viz-crosshair'});
+    cross.style.display = 'none';
+    svg.appendChild(cross);
+    container.appendChild(svg);
+
+    if (spec.series.length > 1){
+      var legend = document.createElement('div');
+      legend.className = 'viz-legend';
+      spec.series.forEach(function(s){
+        var item = document.createElement('span');
+        item.className = 'viz-legend-item';
+        var sw = document.createElement('span');
+        sw.className = 'viz-swatch';
+        sw.style.background = 'var(--series-' + s.slot + ')';
+        var txt = document.createElement('span');
+        txt.textContent = s.label;
+        item.appendChild(sw); item.appendChild(txt);
+        legend.appendChild(item);
+      });
+      container.appendChild(legend);
+    }
+
+    var tip = addTooltip(container);
+    svg.addEventListener('mousemove', function(ev){
+      var pt = svg.createSVGPoint();
+      pt.x = ev.clientX; pt.y = ev.clientY;
+      var loc = pt.matrixTransform(svg.getScreenCTM().inverse());
+      var i = Math.round((loc.x - padL) / (width - padL - padR) * (n - 1));
+      i = Math.max(0, Math.min(n - 1, i));
+      cross.setAttribute('x1', x(i)); cross.setAttribute('x2', x(i));
+      cross.style.display = 'block';
+      var rows = spec.series.map(function(s){
+        return '<div class="viz-tooltip-row"><span class="viz-swatch" style="background:var(--series-' + s.slot + ')"></span>' +
+          s.label + ': ' + fmtVal(s.values[i], spec.yFormat) + '</div>';
+      }).join('');
+      tip.innerHTML = '<div class="viz-tooltip-date">' + spec.dates[i] + '</div>' + rows;
+      tip.style.display = 'block';
+      positionTooltip(tip, container, ev);
+    });
+    svg.addEventListener('mouseleave', function(){ cross.style.display = 'none'; tip.style.display = 'none'; });
+  }
+
+  function divergingBarChart(container, spec){
+    var width = 900, height = 300, padL = 54, padR = 20, padT = 20, padB = 34;
+    var svg = el('svg', {viewBox: '0 0 ' + width + ' ' + height, class: 'viz-svg'});
+    var n = spec.labels.length;
+    var bw = (width - padL - padR) / n;
+    var scale = buildScale(spec.values, height, padT, padB);
+    var y = scale.y, lo = scale.lo, hi = scale.hi;
+    var zero = y(0);
+    svg.appendChild(el('line', {x1: padL, x2: width - padR, y1: zero, y2: zero, class: 'viz-baseline'}));
+    var tip = addTooltip(container);
+
+    spec.values.forEach(function(v, i){
+      var barY = Math.min(zero, y(v));
+      var barH = Math.max(Math.abs(zero - y(v)), 1);
+      var rect = el('rect', {
+        x: padL + i * bw + bw * 0.15, y: barY, width: Math.max(bw * 0.7, 1), height: barH,
+        rx: 2, class: v >= 0 ? 'viz-bar-pos' : 'viz-bar-neg'
+      });
+      rect.addEventListener('mousemove', function(ev){
+        tip.innerHTML = '<div class="viz-tooltip-date">' + spec.labels[i] + '</div><div class="viz-tooltip-row">' + fmtVal(v, 'pct') + '</div>';
+        tip.style.display = 'block';
+        positionTooltip(tip, container, ev);
+      });
+      rect.addEventListener('mouseleave', function(){ tip.style.display = 'none'; });
+      svg.appendChild(rect);
+      var everyK = Math.ceil(n / 12);
+      if (n <= 14 || i % everyK === 0){
+        var lbl = el('text', {x: padL + i * bw + bw / 2, y: height - 12, class: 'viz-axis-label', 'text-anchor': 'middle'});
+        lbl.textContent = spec.labels[i].slice(2);
+        svg.appendChild(lbl);
+      }
+    });
+    [lo, 0, hi].forEach(function(v){
+      var gy = y(v);
+      var lbl = el('text', {x: padL - 8, y: gy + 4, class: 'viz-axis-label', 'text-anchor': 'end'});
+      lbl.textContent = fmtVal(v, 'pct');
+      svg.appendChild(lbl);
+    });
+    container.appendChild(svg);
+  }
+
+  function histogramChart(container, spec){
+    var width = 900, height = 300, padL = 54, padR = 20, padT = 20, padB = 30;
+    var svg = el('svg', {viewBox: '0 0 ' + width + ' ' + height, class: 'viz-svg'});
+    var n = spec.counts.length;
+    var bw = (width - padL - padR) / n;
+    var maxC = Math.max(Math.max.apply(null, spec.counts), Math.max.apply(null, spec.overlay));
+    function y(c){ return height - padB - (c / maxC) * (height - padT - padB); }
+    spec.counts.forEach(function(c, i){
+      var rect = el('rect', {x: padL + i * bw + 1, y: y(c), width: Math.max(bw - 2, 1), height: Math.max(height - padB - y(c), 0), class: 'viz-hist-bar'});
+      svg.appendChild(rect);
+    });
+    var d = '';
+    spec.overlay.forEach(function(c, i){
+      var cx = padL + i * bw + bw / 2;
+      d += (i === 0 ? 'M' : 'L') + cx.toFixed(2) + ',' + y(c).toFixed(2) + ' ';
+    });
+    svg.appendChild(el('path', {d: d, class: 'viz-overlay-line'}));
+    svg.appendChild(el('line', {x1: padL, x2: width - padR, y1: height - padB, y2: height - padB, class: 'viz-baseline'}));
+    var zeroTick = Math.round(n / 2);
+    var lbl = el('text', {x: padL, y: height - 8, class: 'viz-axis-label'});
+    var xName = spec.xLabel || 'daily log return';
+    var dp = spec.xLabel ? 1 : 3;
+    lbl.textContent = xName + ', ' + spec.edges[0].toFixed(dp) + ' to ' + spec.edges[spec.edges.length - 1].toFixed(dp);
+    svg.appendChild(lbl);
+    container.appendChild(svg);
+  }
+
+  function heatBucket(v){
+    if (v >= 0.5) return 'pos3';
+    if (v >= 0.2) return 'pos2';
+    if (v >= 0.05) return 'pos1';
+    if (v > -0.05) return 'zero';
+    if (v > -0.2) return 'neg1';
+    if (v > -0.5) return 'neg2';
+    return 'neg3';
+  }
+
+  function heatmap(container, spec){
+    // rowLabels/colLabels allow a non-square matrix; square charts pass `labels`.
+    var rowLabels = spec.rowLabels || spec.labels;
+    var colLabels = spec.colLabels || spec.labels;
+    var nRows = rowLabels.length, nCols = colLabels.length;
+    var cell = 74, padL = 130, padT = 30;
+    var width = padL + nCols * cell, height = padT + nRows * cell + 10;
+    var svg = el('svg', {viewBox: '0 0 ' + width + ' ' + height, class: 'viz-svg viz-heatmap'});
+    var tip = addTooltip(container);
+
+    rowLabels.forEach(function(lbl, i){
+      var t = el('text', {x: padL - 8, y: padT + i * cell + cell / 2 + 4, class: 'viz-heat-axis', 'text-anchor': 'end'});
+      t.textContent = lbl;
+      svg.appendChild(t);
+    });
+    colLabels.forEach(function(lbl, j){
+      var t2 = el('text', {
+        x: padL + j * cell + cell / 2, y: padT - 8, class: 'viz-heat-axis', 'text-anchor': 'middle'
+      });
+      t2.textContent = lbl.length > 10 ? lbl.slice(0, 9) + '…' : lbl;
+      svg.appendChild(t2);
+    });
+
+    for (var i = 0; i < nRows; i++){
+      for (var j = 0; j < nCols; j++){
+        var v = spec.matrix[i][j];
+        var bucket = heatBucket(v);
+        var rect = el('rect', {
+          x: padL + j * cell, y: padT + i * cell, width: cell, height: cell,
+          class: 'viz-heat-cell', style: 'fill: var(--heat-' + bucket + ')'
+        });
+        rect.addEventListener('mousemove', (function(rowLbl, colLbl, val){
+          return function(ev){
+            tip.innerHTML = '<div class="viz-tooltip-date">' + rowLbl + ' vs ' + colLbl + '</div><div class="viz-tooltip-row">correlation: ' + val.toFixed(3) + '</div>';
+            tip.style.display = 'block';
+            positionTooltip(tip, container, ev);
+          };
+        })(rowLabels[i], colLabels[j], v));
+        rect.addEventListener('mouseleave', function(){ tip.style.display = 'none'; });
+        svg.appendChild(rect);
+        var isInverse = bucket === 'pos3' || bucket === 'neg3' || bucket === 'pos2' || bucket === 'neg2';
+        var label = el('text', {
+          x: padL + j * cell + cell / 2, y: padT + i * cell + cell / 2,
+          class: 'viz-heat-label' + (isInverse ? ' viz-heat-label-inverse' : '')
+        });
+        label.textContent = v.toFixed(2);
+        svg.appendChild(label);
+      }
+    }
+    container.appendChild(svg);
+  }
+
+  DATA.charts.forEach(function(spec){
+    var container = document.getElementById(spec.id);
+    if (!container) return;
+    if (spec.type === 'line' || spec.type === 'area'){
+      spec.area = spec.type === 'area';
+      lineChart(container, spec);
+    } else if (spec.type === 'divergingBar'){
+      divergingBarChart(container, spec);
+    } else if (spec.type === 'histogram'){
+      histogramChart(container, spec);
+    } else if (spec.type === 'heatmap'){
+      heatmap(container, spec);
+    }
+  });
+
+  function applyTheme(t){
+    document.documentElement.setAttribute('data-theme', t);
+    try { localStorage.setItem('theme', t); } catch (e) {}
+  }
+  var stored = null;
+  try { stored = localStorage.getItem('theme'); } catch (e) {}
+  if (stored) applyTheme(stored);
+  var btn = document.getElementById('theme-toggle');
+  if (btn){
+    btn.addEventListener('click', function(){
+      var mql = window.matchMedia('(prefers-color-scheme: dark)');
+      var current = document.documentElement.getAttribute('data-theme') || (mql.matches ? 'dark' : 'light');
+      applyTheme(current === 'dark' ? 'light' : 'dark');
+    });
+  }
+})();
+</script>
+</body>
+</html>
