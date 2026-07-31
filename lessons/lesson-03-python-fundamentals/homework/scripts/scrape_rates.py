@@ -3,7 +3,7 @@ Lesson 3 — Demo 2: scrape a financially relevant public table with BeautifulSo
 
 Target: the Wikipedia "List of S&P 500 companies" page, whose constituents table
 is stable and well-formed — a reliable classroom target. We pull each company's
-ticker, name, GICS sector, and date added, then save to CSV for Lesson 4.
+ticker, name, GICS sector, date added, and CIK, then save to CSV for Lesson 4.
 
 This is deliberately defensive: the network call and the parse are each wrapped
 so a site hiccup fails loudly with a clear message instead of a stack trace.
@@ -49,23 +49,25 @@ def parse_constituents(html: str) -> list[dict[str, str]]:
         cells = tr.find_all("td")
         if len(cells) < 4:                      # guard against malformed rows
             continue
-        rows.append(
-            {
-                "symbol": cells[0].get_text(strip=True),
-                "name": cells[1].get_text(strip=True),
-                "sector": cells[2].get_text(strip=True),
-                "date_added": cells[5].get_text(strip=True) if len(cells) > 5 else "",
-            }
-        )
+        row = {
+            "symbol": cells[0].get_text(strip=True),
+            "name": cells[1].get_text(strip=True),
+            "sector": cells[2].get_text(strip=True),
+            "date_added": cells[5].get_text(strip=True) if len(cells) > 5 else "",
+            "cik": cells[6].get_text(strip=True) if len(cells) > 6 else "",
+        }
+        if row["symbol"] and row["name"]:
+            rows.append(row)
     return rows
 
 
 def save_csv(rows: list[dict[str, str]], path: Path) -> None:
     """Write the scraped rows to a CSV for Lesson 4."""
+    clean_rows = [row for row in rows if any(value.strip() for value in row.values())]
     with path.open("w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=["symbol", "name", "sector", "date_added"])
+        writer = csv.DictWriter(f, fieldnames=["symbol", "name", "sector", "date_added", "cik"])
         writer.writeheader()
-        writer.writerows(rows)
+        writer.writerows(clean_rows)
 
 
 def main() -> None:
